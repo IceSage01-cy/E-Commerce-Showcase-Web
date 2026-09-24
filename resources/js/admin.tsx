@@ -4,29 +4,30 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import AdminPage from './pages/AdminPage';
 import type { Banner, BannerFormData } from './components/BannersTab';
-import { products as initialProducts } from './data/products';
 import type { Product } from './data/products';
 
-let nextId = initialProducts.length + 1;
-
 function AdminRoot() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     axios.get('/admin/api/banners').then((res) => setBanners(res.data));
+    axios.get('/admin/api/products').then((res) => setProducts(res.data));
   }, []);
 
-  function handleAddProduct(data: Omit<Product, 'id'>) {
-    const id = `p${String(nextId++).padStart(3, '0')}`;
-    setProducts((prev) => [{ id, ...data }, ...prev]);
+  async function handleAddProduct(data: Omit<Product, 'id'>) {
+    const res = await axios.post('/admin/api/products', data);
+    setProducts((prev) => [res.data, ...prev]);
   }
 
-  function handleEditProduct(updated: Product) {
-    setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  async function handleEditProduct(updated: Product) {
+    const { id, ...data } = updated;
+    const res = await axios.put(`/admin/api/products/${id}`, data);
+    setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)));
   }
 
-  function handleDeleteProduct(id: string) {
+  async function handleDeleteProduct(id: string) {
+    await axios.delete(`/admin/api/products/${id}`);
     setProducts((prev) => prev.filter((p) => p.id !== id));
   }
 

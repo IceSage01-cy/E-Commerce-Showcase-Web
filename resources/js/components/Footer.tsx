@@ -25,7 +25,7 @@ export default function Footer() {
                 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }}
                 className="text-base font-700"
               >
-                KaizokuFigs
+                Panda's Attict
               </span>
             </div>
             <p style={{ color: '#50505C' }} className="text-xs leading-relaxed">
@@ -62,7 +62,7 @@ export default function Footer() {
           style={{ borderTop: '1px solid #1A1A20', color: '#30303C' }}
           className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
         >
-          <p>© 2026 KaizokuFigs. All rights reserved.</p>
+          <p>© 2026 Panda's Attict. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <p>Built with ❤️ for collectors, by collectors.</p>
           </div>

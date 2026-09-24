@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -6,7 +7,6 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
 import CartPage from './pages/CartPage';
-import { products as initialProducts } from './data/products';
 import type { Product } from './data/products';
 
 type Route =
@@ -19,9 +19,16 @@ type Route =
 
 export default function App() {
   const [route, setRoute] = useState<Route>({ type: 'home' });
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [cart, setCart] = useState<string[]>([]);
   const [cartToast, setCartToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    axios.get('/api/products').then((res) => {
+      setProducts(res.data);
+    }).finally(() => setProductsLoading(false));
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -72,7 +79,11 @@ export default function App() {
       <Header onSearch={(q) => handleSearch(q)} onNavigate={navigate} cartCount={cart.length} />
 
       <main style={{ paddingBottom: 16 }}>
-        {route.type === 'home' && (
+        {productsLoading && route.type === 'home' && products.length === 0 ? (
+          <div className="flex items-center justify-center" style={{ height: '50vh', color: 'var(--color-text-muted)', fontFamily: 'Karla, sans-serif', fontSize: 14 }}>
+            Setting the table…
+          </div>
+        ) : route.type === 'home' && (
           <HomePage products={products} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
         )}
         {route.type === 'product' && (

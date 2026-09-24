@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { Product, Category, Condition } from '../data/products';
 import { getStockStatus, formatPrice } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
+import ImageDropzone from '../components/ImageDropzone';
 
 interface AdminPageProps {
   products: Product[];
@@ -37,7 +38,7 @@ const emptyForm = (): Omit<Product, 'id'> => ({
   character: '',
   price: 0,
   salePrice: undefined,
-  images: [''],
+  images: [],
   category: 'on-hand',
   condition: 'New',
   stock: 0,
@@ -729,15 +730,13 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                 </Field>
               </div>
 
-              {/* Image URL */}
-              <Field label="Image URL">
-                <input
-                  style={inputStyle}
-                  value={form.images[0] ?? ''}
-                  onChange={(e) => set('images', [e.target.value, ...(form.images.slice(1))])}
-                  placeholder="https://images.unsplash.com/…"
-                />
-              </Field>
+              {/* Photos */}
+              <ImageDropzone
+                label="Photos"
+                images={form.images.filter(Boolean)}
+                onChange={(imgs) => set('images', imgs)}
+                multiple
+              />
 
               {/* Pre-order fields */}
               {form.category === 'pre-order' && (

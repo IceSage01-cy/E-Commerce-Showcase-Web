@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { heroSlides as fallbackSlides } from '../data/products';
 
 interface Slide {
   id: string;
@@ -17,7 +16,8 @@ interface HeroSliderProps {
 }
 
 export default function HeroSlider({ onNavigate }: HeroSliderProps) {
-  const [slides, setSlides] = useState<Slide[]>(fallbackSlides);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [current, setCurrent] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -27,9 +27,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
         setSlides(res.data);
         setCurrent(0);
       }
-    }).catch(() => {
-      // Keep the fallback slides if the request fails for any reason.
-    });
+    }).finally(() => setLoaded(true));
   }, []);
 
   const go = useCallback((index: number) => {
@@ -45,7 +43,15 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
     return () => clearInterval(timer);
   }, [current, go, slides.length]);
 
-  if (slides.length === 0) return null;
+  if (slides.length === 0) {
+    if (loaded) return null;
+    return (
+      <div
+        className="w-full animate-pulse"
+        style={{ height: 'min(72vh, 580px)', backgroundColor: 'var(--color-bg-secondary)' }}
+      />
+    );
+  }
 
   const slide = slides[current];
 

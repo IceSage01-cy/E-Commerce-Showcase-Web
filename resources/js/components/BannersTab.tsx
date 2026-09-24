@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ImageDropzone from './ImageDropzone';
 
 export interface Banner {
   id: string;
@@ -190,8 +191,12 @@ export default function BannersTab({ banners, onAdd, onEdit, onDelete }: Banners
             </div>
 
             <div className="mb-3">
-              <label style={label}>Image URL</label>
-              <input style={inputStyle} value={form.image} onChange={(e) => set('image', e.target.value)} placeholder="https://..." />
+              <ImageDropzone
+                label="Banner Image"
+                images={form.image ? [form.image] : []}
+                onChange={(imgs) => set('image', imgs[0] ?? '')}
+                multiple={false}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-3">
