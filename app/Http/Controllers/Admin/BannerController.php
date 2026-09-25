@@ -16,7 +16,7 @@ class BannerController extends Controller
             'subtitle' => 'nullable|string|max:255',
             'cta' => 'required|string|max:60',
             'ctaAction' => 'required|string|max:60',
-            'image' => 'required|string|max:2048',
+            'image' => 'required|string|url|max:2048',
             'accent' => 'required|string|max:7',
             'sortOrder' => 'nullable|integer|min:0',
             'isActive' => 'boolean',

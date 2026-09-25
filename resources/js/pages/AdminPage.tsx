@@ -54,6 +54,7 @@ const emptyForm = (): Omit<Product, 'id'> => ({
 export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigate, banners, onAddBanner, onEditBanner, onDeleteBanner }: AdminPageProps) {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState<Omit<Product, 'id'>>(emptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -78,11 +79,13 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
 
   function openAdd() {
     setForm(emptyForm());
+    setStep(0);
     setModal({ mode: 'add' });
   }
   function openEdit(p: Product) {
     const { id, ...rest } = p;
     setForm({ ...rest });
+    setStep(0);
     setModal({ mode: 'edit', product: p });
   }
   function saveForm() {
@@ -97,6 +100,11 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  const STEPS = ['Basics', 'Photos', 'Pricing & Stock', 'Details'] as const;
+  const step0Valid = form.name.trim() !== '' && form.series.trim() !== '';
+  const step2Valid = form.price > 0;
+  const canGoNext = step === 0 ? step0Valid : step === 2 ? step2Valid : true;
 
   const inputStyle = {
     backgroundColor: '#0D0D10',
@@ -644,179 +652,243 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
               </button>
             </div>
 
-            <div className="p-5 flex flex-col gap-4">
-              {/* Row 1: Name */}
-              <Field label="Product Name *">
-                <input style={inputStyle} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Hatsune Miku DX Edition" />
-              </Field>
-
-              {/* Row 2: Series + Character */}
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Series *">
-                  <input style={inputStyle} value={form.series} onChange={(e) => set('series', e.target.value)} placeholder="e.g. Vocaloid" />
-                </Field>
-                <Field label="Character *">
-                  <input style={inputStyle} value={form.character} onChange={(e) => set('character', e.target.value)} placeholder="e.g. Hatsune Miku" />
-                </Field>
-              </div>
-
-              {/* Row 3: Price + Sale Price */}
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Price (₱) *">
-                  <input
-                    style={inputStyle}
-                    type="number"
-                    min={0}
-                    value={form.price || ''}
-                    onChange={(e) => set('price', Number(e.target.value))}
-                    placeholder="3500"
-                  />
-                </Field>
-                <Field label="Sale Price (₱) — optional">
-                  <input
-                    style={inputStyle}
-                    type="number"
-                    min={0}
-                    value={form.salePrice ?? ''}
-                    onChange={(e) => set('salePrice', e.target.value ? Number(e.target.value) : undefined)}
-                    placeholder="Leave blank if no sale"
-                  />
-                </Field>
-              </div>
-
-              {/* Row 4: Category + Condition */}
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Category *">
-                  <select
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                    value={form.category}
-                    onChange={(e) => set('category', e.target.value as Category)}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{categoryLabel[c]}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Condition *">
-                  <select
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                    value={form.condition}
-                    onChange={(e) => set('condition', e.target.value as Condition)}
-                  >
-                    {CONDITIONS.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-
-              {/* Row 5: Stock + Manufacturer + Scale */}
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="Stock Qty *">
-                  <input
-                    style={inputStyle}
-                    type="number"
-                    min={0}
-                    value={form.stock}
-                    onChange={(e) => set('stock', Number(e.target.value))}
-                    placeholder="0"
-                  />
-                </Field>
-                <Field label="Manufacturer">
-                  <input style={inputStyle} value={form.manufacturer} onChange={(e) => set('manufacturer', e.target.value)} placeholder="Good Smile Co." />
-                </Field>
-                <Field label="Scale">
-                  <input style={inputStyle} value={form.scale ?? ''} onChange={(e) => set('scale', e.target.value)} placeholder="1/7" />
-                </Field>
-              </div>
-
-              {/* Photos */}
-              <ImageDropzone
-                label="Photos"
-                images={form.images.filter(Boolean)}
-                onChange={(imgs) => set('images', imgs)}
-                multiple
-              />
-
-              {/* Pre-order fields */}
-              {form.category === 'pre-order' && (
-                <Field label="Estimated Arrival">
-                  <input style={inputStyle} value={form.estimatedArrival ?? ''} onChange={(e) => set('estimatedArrival', e.target.value)} placeholder="e.g. March 2027" />
-                </Field>
-              )}
-
-              {/* Description */}
-              <Field label="Description">
-                <textarea
-                  style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
-                  value={form.description}
-                  onChange={(e) => set('description', e.target.value)}
-                  placeholder="Product details, features, included accessories…"
-                />
-              </Field>
-
-              {/* Featured toggle */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => set('isFeatured', !form.isFeatured)}
-                  style={{
-                    width: 40,
-                    height: 22,
-                    borderRadius: 11,
-                    backgroundColor: form.isFeatured ? '#FF2D78' : '#222228',
-                    border: 'none',
-                    position: 'relative',
-                    transition: 'background 0.2s',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
+            {/* Step indicator */}
+            <div style={{ padding: '14px 20px 0' }} className="flex items-center gap-2">
+              {STEPS.map((label, i) => (
+                <div key={label} className="flex items-center gap-2 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => i < step && setStep(i)}
+                    disabled={i > step}
                     style={{
-                      position: 'absolute',
-                      top: 3,
-                      left: form.isFeatured ? 21 : 3,
-                      width: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                      backgroundColor: '#fff',
-                      transition: 'left 0.2s',
-                      display: 'block',
+                      width: '100%',
+                      height: 4,
+                      borderRadius: 9999,
+                      backgroundColor: i <= step ? '#FF2D78' : '#1E1E26',
+                      border: 'none',
+                      cursor: i < step ? 'pointer' : 'default',
                     }}
                   />
-                </button>
-                <span style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>Mark as Featured product</span>
-              </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '6px 20px 0' }} className="flex items-center justify-between">
+              <span style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 12 }} className="font-600">
+                {step + 1}. {STEPS[step]}
+              </span>
+              <span style={{ fontFamily: 'Inter, sans-serif', color: '#50505C', fontSize: 11 }}>
+                Step {step + 1} of {STEPS.length}
+              </span>
+            </div>
+
+            <div className="p-5 flex flex-col gap-4" style={{ minHeight: 280 }}>
+              {step === 0 && (
+                <>
+                  <Field label="Product Name *">
+                    <input style={inputStyle} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Hatsune Miku DX Edition" />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Series *">
+                      <input style={inputStyle} value={form.series} onChange={(e) => set('series', e.target.value)} placeholder="e.g. Vocaloid" />
+                    </Field>
+                    <Field label="Character *">
+                      <input style={inputStyle} value={form.character} onChange={(e) => set('character', e.target.value)} placeholder="e.g. Hatsune Miku" />
+                    </Field>
+                  </div>
+                  <Field label="Manufacturer">
+                    <input style={inputStyle} value={form.manufacturer} onChange={(e) => set('manufacturer', e.target.value)} placeholder="Good Smile Co." />
+                  </Field>
+                </>
+              )}
+
+              {step === 1 && (
+                <ImageDropzone
+                  label="Photos"
+                  images={form.images.filter(Boolean)}
+                  onChange={(imgs) => set('images', imgs)}
+                  multiple
+                  folder="products"
+                />
+              )}
+
+              {step === 2 && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Category *">
+                      <select
+                        style={{ ...inputStyle, cursor: 'pointer' }}
+                        value={form.category}
+                        onChange={(e) => set('category', e.target.value as Category)}
+                      >
+                        {CATEGORIES.map((c) => (
+                          <option key={c} value={c}>{categoryLabel[c]}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Condition *">
+                      <select
+                        style={{ ...inputStyle, cursor: 'pointer' }}
+                        value={form.condition}
+                        onChange={(e) => set('condition', e.target.value as Condition)}
+                      >
+                        {CONDITIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Price (₱) *">
+                      <input
+                        style={inputStyle}
+                        type="number"
+                        min={0}
+                        value={form.price || ''}
+                        onChange={(e) => set('price', Number(e.target.value))}
+                        placeholder="3500"
+                      />
+                    </Field>
+                    <Field label="Sale Price (₱) — optional">
+                      <input
+                        style={inputStyle}
+                        type="number"
+                        min={0}
+                        value={form.salePrice ?? ''}
+                        onChange={(e) => set('salePrice', e.target.value ? Number(e.target.value) : undefined)}
+                        placeholder="Leave blank if no sale"
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Stock Qty *">
+                      <input
+                        style={inputStyle}
+                        type="number"
+                        min={0}
+                        value={form.stock}
+                        onChange={(e) => set('stock', Number(e.target.value))}
+                        placeholder="0"
+                      />
+                    </Field>
+                    <Field label="Scale">
+                      <input style={inputStyle} value={form.scale ?? ''} onChange={(e) => set('scale', e.target.value)} placeholder="1/7" />
+                    </Field>
+                  </div>
+
+                  {form.category === 'pre-order' && (
+                    <Field label="Estimated Arrival">
+                      <input style={inputStyle} value={form.estimatedArrival ?? ''} onChange={(e) => set('estimatedArrival', e.target.value)} placeholder="e.g. March 2027" />
+                    </Field>
+                  )}
+                </>
+              )}
+
+              {step === 3 && (
+                <>
+                  <Field label="Description">
+                    <textarea
+                      style={{ ...inputStyle, minHeight: 120, resize: 'vertical' }}
+                      value={form.description}
+                      onChange={(e) => set('description', e.target.value)}
+                      placeholder="Product details, features, included accessories…"
+                    />
+                  </Field>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => set('isFeatured', !form.isFeatured)}
+                      style={{
+                        width: 40,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: form.isFeatured ? '#FF2D78' : '#222228',
+                        border: 'none',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: 3,
+                          left: form.isFeatured ? 21 : 3,
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          backgroundColor: '#fff',
+                          transition: 'left 0.2s',
+                          display: 'block',
+                        }}
+                      />
+                    </button>
+                    <span style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>Mark as Featured product</span>
+                  </div>
+
+                  {/* Review summary */}
+                  <div style={{ backgroundColor: '#0D0D10', border: '1px solid #1A1A20', borderRadius: '0.625rem', padding: '12px 14px' }} className="flex flex-col gap-1.5">
+                    <p style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 12 }} className="font-600 mb-0.5">Ready to save</p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', color: '#80808C', fontSize: 12 }}>
+                      {form.name || '(untitled)'} — {form.series || '(no series)'} · {formatPrice(form.price)}{form.salePrice ? ` (sale ${formatPrice(form.salePrice)})` : ''} · {form.stock} in stock · {form.images.filter(Boolean).length} photo{form.images.filter(Boolean).length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Footer */}
-            <div style={{ borderTop: '1px solid #1A1A20', padding: '14px 20px' }} className="flex items-center justify-end gap-3">
+            <div style={{ borderTop: '1px solid #1A1A20', padding: '14px 20px' }} className="flex items-center justify-between gap-3">
               <button
-                onClick={() => setModal(null)}
+                onClick={() => (step === 0 ? setModal(null) : setStep(step - 1))}
                 style={{ color: '#80808C', backgroundColor: '#1A1A20', border: '1px solid #222228', fontFamily: 'Outfit, sans-serif', fontSize: 13, borderRadius: 9999, padding: '8px 20px' }}
                 className="font-500 hover:text-[#F0F0F4] transition-colors"
               >
-                Cancel
+                {step === 0 ? 'Cancel' : 'Back'}
               </button>
-              <button
-                onClick={saveForm}
-                disabled={!form.name.trim() || !form.series.trim() || form.price <= 0}
-                style={{
-                  background: '#FF2D78',
-                  color: '#fff',
-                  fontFamily: 'Outfit, sans-serif',
-                  fontSize: 13,
-                  borderRadius: 9999,
-                  padding: '8px 24px',
-                  opacity: (!form.name.trim() || !form.series.trim() || form.price <= 0) ? 0.4 : 1,
-                  border: 'none',
-                  cursor: (!form.name.trim() || !form.series.trim() || form.price <= 0) ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 12px rgba(255,45,120,0.3)',
-                }}
-                className="font-700 hover:opacity-90 transition-opacity"
-              >
-                {modal.mode === 'add' ? 'Add Product' : 'Save Changes'}
-              </button>
+
+              {step < STEPS.length - 1 ? (
+                <button
+                  onClick={() => canGoNext && setStep(step + 1)}
+                  disabled={!canGoNext}
+                  style={{
+                    background: '#FF2D78',
+                    color: '#fff',
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: 13,
+                    borderRadius: 9999,
+                    padding: '8px 24px',
+                    opacity: canGoNext ? 1 : 0.4,
+                    border: 'none',
+                    cursor: canGoNext ? 'pointer' : 'not-allowed',
+                  }}
+                  className="font-700 hover:opacity-90 transition-opacity"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={saveForm}
+                  disabled={!step0Valid || !step2Valid}
+                  style={{
+                    background: '#FF2D78',
+                    color: '#fff',
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: 13,
+                    borderRadius: 9999,
+                    padding: '8px 24px',
+                    opacity: (!step0Valid || !step2Valid) ? 0.4 : 1,
+                    border: 'none',
+                    cursor: (!step0Valid || !step2Valid) ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(255,45,120,0.3)',
+                  }}
+                  className="font-700 hover:opacity-90 transition-opacity"
+                >
+                  {modal.mode === 'add' ? 'Add Product' : 'Save Changes'}
+                </button>
+              )}
             </div>
           </div>
         </div>

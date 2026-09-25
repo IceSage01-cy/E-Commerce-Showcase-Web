@@ -18,7 +18,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'salePrice' => 'nullable|numeric|min:0',
             'images' => 'array',
-            'images.*' => 'string',
+            'images.*' => 'string|url|max:2048',
             'category' => 'required|string|in:on-hand,pre-order,new-release',
             'condition' => 'required|string|in:New,Pre-owned,Loose,Sealed',
             'stock' => 'required|integer|min:0',
