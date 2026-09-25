@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
 
@@ -106,7 +107,7 @@ function buildReceiptText(
     `──────────────────────────`,
     ` This is an ORDER REQUEST only.`,
     `Send this to us to confirm your order:`,
-    `Facebook: https://www.facebook.com/TOYcomManjiGangAuthenticFigures`,
+    `Facebook: fb.com/pandasattic`,
     `We'll reply within 24 hours. Thank you! 🐼`,
   ]
     .filter(Boolean)
@@ -129,6 +130,8 @@ export default function CartPage({
     notes: '',
   });
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   // Aggregate by product id
   const itemMap = new Map<string, number>();
@@ -165,6 +168,26 @@ export default function CartPage({
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     });
+  }
+
+  async function downloadReceiptImage() {
+    if (!receiptRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: '#0E0E12',
+        scale: 2, // sharper output for a small screenshot-style card
+        useCORS: true,
+      });
+      const link = document.createElement('a');
+      link.download = `receipt-${receiptNo}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch {
+      alert('Could not generate the receipt image. Try the "Copy Receipt Text" option instead.');
+    } finally {
+      setDownloading(false);
+    }
   }
 
   // Step dots
@@ -688,11 +711,12 @@ export default function CartPage({
               marginBottom: 24,
             }}
           >
-            Screenshot this or copy the text and send it to us on Facebook.
+            Screenshot this, download it as an image, or copy the text — then send it to us on Facebook.
           </p>
 
           {/* Receipt card */}
           <div
+            ref={receiptRef}
             style={{
               backgroundColor: '#0E0E12',
               border: `1px solid ${S.border}`,
@@ -1058,6 +1082,35 @@ export default function CartPage({
           {/* Actions */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
+              onClick={downloadReceiptImage}
+              disabled={downloading}
+              style={{
+                backgroundColor: S.primary,
+                color: '#fff',
+                border: `1.5px solid ${S.primary}`,
+                fontFamily: 'Outfit, sans-serif',
+                fontSize: 14,
+                fontWeight: 700,
+                borderRadius: 9999,
+                padding: '13px 24px',
+                cursor: downloading ? 'default' : 'pointer',
+                opacity: downloading ? 0.7 : 1,
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: '0 4px 14px rgba(255,45,120,0.3)',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1.5V9.5M7 9.5L4 6.5M7 9.5L10 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 11V12.5H12V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>{' '}
+              {downloading ? 'Preparing image…' : 'Download as Image'}
+            </button>
+
+            <button
               onClick={copyReceipt}
               style={{
                 backgroundColor: copied ? 'rgba(34,197,94,0.15)' : S.card,
@@ -1101,7 +1154,7 @@ export default function CartPage({
             </button>
 
             <button
-              onClick={() => window.open('https://www.facebook.com/messages/t/100066661427714', '_blank')}
+              onClick={() => window.open('https://www.facebook.com/pandasattic', '_blank')}
               style={{
                 background: 'linear-gradient(135deg, #1877F2, #0d5fcc)',
                 color: '#fff',
