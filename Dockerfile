@@ -19,10 +19,11 @@ RUN apt-get update && apt-get install -y \
         git \
         unzip \
         libzip-dev \
+        libpq-dev \
         libpng-dev \
         libonig-dev \
         libxml2-dev \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip gd \
+    && docker-php-ext-install pdo pdo_pgsql mbstring zip gd \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
