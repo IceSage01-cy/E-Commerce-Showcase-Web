@@ -106,7 +106,7 @@ function buildReceiptText(
     `──────────────────────────`,
     ` This is an ORDER REQUEST only.`,
     `Send this to us to confirm your order:`,
-    `Facebook: fb.com/pandasattic`,
+    `Facebook: https://www.facebook.com/TOYcomManjiGangAuthenticFigures`,
     `We'll reply within 24 hours. Thank you! 🐼`,
   ]
     .filter(Boolean)
@@ -1101,7 +1101,7 @@ export default function CartPage({
             </button>
 
             <button
-              onClick={() => window.open('https://www.facebook.com/pandasattic', '_blank')}
+              onClick={() => window.open('https://www.facebook.com/messages/t/100066661427714', '_blank')}
               style={{
                 background: 'linear-gradient(135deg, #1877F2, #0d5fcc)',
                 color: '#fff',
