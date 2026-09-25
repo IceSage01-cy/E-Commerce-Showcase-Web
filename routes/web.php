@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\ImageProxyController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,10 @@ Route::get('/', function () {
 Route::get('/api/banners', [BannerController::class, 'index'])->name('banners.index');
 Route::get('/api/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/api/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+// Used by the receipt "Download as Image" button to fetch R2 images
+// same-origin so the browser doesn't taint the canvas.
+Route::get('/api/image-proxy', [ImageProxyController::class, 'show'])->name('image-proxy');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');

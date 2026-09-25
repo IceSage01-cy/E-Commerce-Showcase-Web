@@ -173,19 +173,50 @@ export default function CartPage({
   async function downloadReceiptImage() {
     if (!receiptRef.current || downloading) return;
     setDownloading(true);
+
+    // Swap each <img> in the receipt to a same-origin proxied copy before
+    // capturing — cross-origin R2 images (even with useCORS) taint the
+    // canvas and make toDataURL() throw, so this sidesteps that instead of
+    // depending on R2's CORS configuration.
+    const imgs = Array.from(receiptRef.current.querySelectorAll('img'));
+    const originalSrcs = imgs.map((img) => img.src);
+
     try {
+      await Promise.all(
+        imgs.map(async (img, i) => {
+          const original = originalSrcs[i];
+          if (!original || original.startsWith('data:')) return;
+          try {
+            const res = await fetch(`/api/image-proxy?url=${encodeURIComponent(original)}`);
+            if (!res.ok) return;
+            const blob = await res.blob();
+            const dataUrl: string = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+            img.src = dataUrl;
+          } catch {
+            // Leave this one image as-is; html2canvas will just skip it
+            // rather than fail the whole capture.
+          }
+        })
+      );
+
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: '#0E0E12',
         scale: 2, // sharper output for a small screenshot-style card
-        useCORS: true,
       });
       const link = document.createElement('a');
       link.download = `receipt-${receiptNo}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-    } catch {
+    } catch (err) {
+      console.error('Receipt image generation failed', err);
       alert('Could not generate the receipt image. Try the "Copy Receipt Text" option instead.');
     } finally {
+      imgs.forEach((img, i) => { img.src = originalSrcs[i]; });
       setDownloading(false);
     }
   }
