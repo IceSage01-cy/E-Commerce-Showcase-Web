@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Product, Category } from '../data/products';
 import ProductCard from '../components/ProductCard';
+import AnimeBrowser from '../components/AnimeBrowser';
 
 interface SearchPageProps {
   initialQuery: string;
@@ -18,7 +19,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
   const [query, setQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [availability, setAvailability] = useState<AvailabilityFilter>('all');
-  const [filterBy, setFilterBy] = useState<'name' | 'character'>('name');
+  const [filterBy, setFilterBy] = useState<'name' | 'character' | 'anime'>('name');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
     (initialCategory as Category) ?? 'all'
   );
@@ -38,14 +39,21 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
       list = list.filter((p) => p.category === 'pre-order');
     }
 
-    // Text search
+    // Text search. In "By Anime" mode with no typed query, we skip this
+    // entirely and hand the (category/availability-filtered) list to the
+    // AnimeBrowser drill-down instead — see the render section below.
     if (query.trim()) {
       const q = query.toLowerCase();
-      list = list.filter((p) =>
-        filterBy === 'name'
-          ? p.name.toLowerCase().includes(q) || p.series.toLowerCase().includes(q)
-          : p.character.toLowerCase().includes(q)
-      );
+      list = list.filter((p) => {
+        if (filterBy === 'name') return p.name.toLowerCase().includes(q) || p.series.toLowerCase().includes(q);
+        if (filterBy === 'character') return p.character.toLowerCase().includes(q);
+        // Typed a query while in "By Anime" mode — search everything.
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.series.toLowerCase().includes(q) ||
+          p.character.toLowerCase().includes(q)
+        );
+      });
     }
 
     // Sort
@@ -135,6 +143,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
             <div className="flex gap-1">
               <Pill label="By Name" active={filterBy === 'name'} onClick={() => setFilterBy('name')} />
               <Pill label="By Character" active={filterBy === 'character'} onClick={() => setFilterBy('character')} />
+              <Pill label="By Anime" active={filterBy === 'anime'} onClick={() => setFilterBy('anime')} />
             </div>
 
             <div style={{ backgroundColor: '#222228', width: 1, height: 20 }} className="mx-1 hidden sm:block" />
@@ -180,15 +189,24 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
 
       {/* Results */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-5">
-          <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif' }} className="text-sm">
-            {results.length === 0
-              ? 'No results found'
-              : `${results.length} result${results.length !== 1 ? 's' : ''}${query.trim() ? ` for "${query}"` : ''}`}
-          </p>
-        </div>
+        {!(filterBy === 'anime' && !query.trim()) && (
+          <div className="flex items-center justify-between mb-5">
+            <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif' }} className="text-sm">
+              {results.length === 0
+                ? 'No results found'
+                : `${results.length} result${results.length !== 1 ? 's' : ''}${query.trim() ? ` for "${query}"` : ''}`}
+            </p>
+          </div>
+        )}
 
-        {results.length === 0 ? (
+        {filterBy === 'anime' && !query.trim() ? (
+          <AnimeBrowser
+            key={`${categoryFilter}-${availability}`}
+            products={results}
+            onView={onView}
+            onAddToCart={onAddToCart}
+          />
+        ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div style={{ color: '#222228' }}>
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
