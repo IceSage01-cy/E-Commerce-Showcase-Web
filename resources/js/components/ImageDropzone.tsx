@@ -18,7 +18,22 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [urlValue, setUrlValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  function addUrl() {
+    const url = urlValue.trim();
+    if (!url) return;
+    try {
+      new URL(url);
+    } catch {
+      setError('Enter a valid image URL.');
+      return;
+    }
+    setError(null);
+    onChange(multiple ? [...images, url] : [url]);
+    setUrlValue('');
+  }
 
   async function uploadFiles(files: FileList | File[]) {
     const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
@@ -180,6 +195,53 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
           <p style={{ color: 'var(--color-text-faint)', fontFamily: 'Karla, sans-serif', fontSize: 11 }} className="mt-1">
             JPG or PNG, up to 5MB each
           </p>
+        </div>
+      )}
+
+      {(multiple || images.length === 0) && (
+        <div className="flex gap-2 mt-2">
+          <input
+            type="text"
+            value={urlValue}
+            onChange={(e) => setUrlValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addUrl();
+              }
+            }}
+            placeholder="Or paste an image URL…"
+            style={{
+              flex: 1,
+              backgroundColor: 'var(--color-bg)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text)',
+              fontFamily: 'Karla, sans-serif',
+              fontSize: 12,
+              borderRadius: '0.5rem',
+              padding: '7px 10px',
+              outline: 'none',
+            }}
+          />
+          <button
+            type="button"
+            onClick={addUrl}
+            disabled={!urlValue.trim()}
+            style={{
+              fontFamily: 'Karla, sans-serif',
+              fontSize: 12,
+              borderRadius: '0.5rem',
+              padding: '7px 14px',
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-bg)',
+              color: 'var(--color-text-muted)',
+              cursor: urlValue.trim() ? 'pointer' : 'not-allowed',
+              opacity: urlValue.trim() ? 1 : 0.5,
+              flexShrink: 0,
+            }}
+          >
+            Add
+          </button>
         </div>
       )}
 

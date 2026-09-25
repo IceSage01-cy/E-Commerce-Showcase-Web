@@ -16,14 +16,24 @@ function AdminRoot() {
   }, []);
 
   async function handleAddProduct(data: Omit<Product, 'id'>) {
-    const res = await axios.post('/admin/api/products', data);
-    setProducts((prev) => [res.data, ...prev]);
+    try {
+      const res = await axios.post('/admin/api/products', data);
+      setProducts((prev) => [res.data, ...prev]);
+    } catch (err) {
+      console.error('Failed to add product', err);
+      alert('Could not save the product. Please check the form and try again.');
+    }
   }
 
   async function handleEditProduct(updated: Product) {
     const { id, ...data } = updated;
-    const res = await axios.put(`/admin/api/products/${id}`, data);
-    setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)));
+    try {
+      const res = await axios.put(`/admin/api/products/${id}`, data);
+      setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)));
+    } catch (err) {
+      console.error('Failed to update product', err);
+      alert('Could not save the product. Please check the form and try again.');
+    }
   }
 
   async function handleDeleteProduct(id: string) {
