@@ -11,5 +11,13 @@ fi
 php artisan config:clear
 php artisan migrate --force
 
+# Optional one-off seeding: set RUN_SEEDERS=true on Render, deploy, watch the
+# logs to confirm it ran, then set it back to false (or remove it) so it
+# doesn't reseed on every future deploy.
+if [ "$RUN_SEEDERS" = "true" ]; then
+  echo "RUN_SEEDERS=true — running database seeders..."
+  php artisan db:seed --force
+fi
+
 PORT="${PORT:-8080}"
 exec php artisan serve --host 0.0.0.0 --port "$PORT"

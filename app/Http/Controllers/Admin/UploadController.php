@@ -11,22 +11,22 @@ use Illuminate\Support\Str;
 class UploadController extends Controller
 {
     /**
-     * Store a dropped/selected image on the public disk and hand back a URL
-     * the frontend can drop straight into a product or banner's image list.
+     * Upload an image file to Cloudflare R2 and return its public URL.
      */
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|image|max:5120', // 5MB
+            // 5MB max, images only
+            'file' => 'required|image|max:5120',
         ]);
 
         $file = $request->file('file');
-        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $path = $file->storeAs('uploads', $filename, 'public');
+        $filename = 'banners/'.Str::uuid().'.'.$file->getClientOriginalExtension();
+
+        Storage::disk('r2')->put($filename, file_get_contents($file), 'public');
 
         return response()->json([
-            'url' => Storage::disk('public')->url($path),
-            'path' => $path,
+            'url' => Storage::disk('r2')->url($filename),
         ], 201);
     }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ImageDropzone from './ImageDropzone';
+import axios from 'axios';
 
 export interface Banner {
   id: string;
@@ -64,6 +64,31 @@ export default function BannersTab({ banners, onAdd, onEdit, onDelete }: Banners
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; id?: string } | null>(null);
   const [form, setForm] = useState<BannerFormData>(emptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    const data = new FormData();
+    data.append('file', file);
+
+    try {
+      const res = await axios.post('/admin/api/uploads', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      set('image', res.data.url);
+    } catch (err) {
+      setUploadError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
 
   function set<K extends keyof BannerFormData>(key: K, value: BannerFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -191,11 +216,28 @@ export default function BannersTab({ banners, onAdd, onEdit, onDelete }: Banners
             </div>
 
             <div className="mb-3">
-              <ImageDropzone
-                label="Banner Image"
-                images={form.image ? [form.image] : []}
-                onChange={(imgs) => set('image', imgs[0] ?? '')}
-                multiple={false}
+              <label style={label}>Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                disabled={uploading}
+                style={{ color: '#F0F0F4', fontSize: 13, marginBottom: 6 }}
+              />
+              {uploading && <p style={{ fontSize: 12, color: '#80808C' }}>Uploading…</p>}
+              {uploadError && <p style={{ fontSize: 12, color: '#F87171' }}>{uploadError}</p>}
+              {form.image && (
+                <img
+                  src={form.image}
+                  alt="Preview"
+                  style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 6, marginTop: 6 }}
+                />
+              )}
+              <input
+                style={{ ...inputStyle, marginTop: 6 }}
+                value={form.image}
+                onChange={(e) => set('image', e.target.value)}
+                placeholder="Or paste an image URL"
               />
             </div>
 
