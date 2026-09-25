@@ -1,9 +1,11 @@
 #!/bin/sh
 set -e
 
-# Generate an APP_KEY only if one isn't already set via env vars.
+# APP_KEY must be set as an environment variable on Render (there's no
+# .env file in this container, so `artisan key:generate` can't run here).
 if [ -z "$APP_KEY" ]; then
-  php artisan key:generate --force
+  echo "ERROR: APP_KEY is not set. Generate one locally with 'php artisan key:generate --show' and set it as an env var on Render." >&2
+  exit 1
 fi
 
 php artisan config:clear
