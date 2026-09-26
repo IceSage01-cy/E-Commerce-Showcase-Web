@@ -1,5 +1,9 @@
 import { useState, useRef } from 'react';
-import html2canvas from 'html2canvas';
+// html2canvas (the original) can't parse the oklch()/lab()/lch() color
+// functions Tailwind v4 generates by default, and throws "Attempting to
+// parse an unsupported color function" when it hits one. html2canvas-pro
+// is a maintained fork with the same API that adds support for those.
+import html2canvas from 'html2canvas-pro';
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
 
