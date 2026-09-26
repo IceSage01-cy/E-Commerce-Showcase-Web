@@ -13,47 +13,35 @@ interface SearchPageProps {
 }
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
-type AvailabilityFilter = 'all' | 'in-stock' | 'pre-order';
 
 export default function SearchPage({ initialQuery, initialCategory, onView, onAddToCart, onSearch, products }: SearchPageProps) {
   const [query, setQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
-  const [availability, setAvailability] = useState<AvailabilityFilter>('all');
-  const [filterBy, setFilterBy] = useState<'name' | 'character' | 'anime'>('name');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
-    (initialCategory as Category) ?? 'all'
+    (initialCategory as Category) || 'all'
   );
 
   const results = useMemo(() => {
     let list = [...products];
 
-    // Category filter
+    // Category filter (on-hand items also require stock > 0 to count as available)
     if (categoryFilter !== 'all') {
-      list = list.filter((p) => p.category === categoryFilter);
+      list = list.filter((p) =>
+        p.category === categoryFilter &&
+        (categoryFilter !== 'on-hand' || p.stock > 0)
+      );
     }
 
-    // Availability filter
-    if (availability === 'in-stock') {
-      list = list.filter((p) => p.category === 'on-hand' && p.stock > 0);
-    } else if (availability === 'pre-order') {
-      list = list.filter((p) => p.category === 'pre-order');
-    }
-
-    // Text search. In "By Anime" mode with no typed query, we skip this
-    // entirely and hand the (category/availability-filtered) list to the
-    // AnimeBrowser drill-down instead — see the render section below.
+    // Text search. With no typed query, we skip this entirely and hand the
+    // (category-filtered) list to the AnimeBrowser drill-down instead — see
+    // the render section below.
     if (query.trim()) {
       const q = query.toLowerCase();
-      list = list.filter((p) => {
-        if (filterBy === 'name') return p.name.toLowerCase().includes(q) || p.series.toLowerCase().includes(q);
-        if (filterBy === 'character') return p.character.toLowerCase().includes(q);
-        // Typed a query while in "By Anime" mode — search everything.
-        return (
-          p.name.toLowerCase().includes(q) ||
-          p.series.toLowerCase().includes(q) ||
-          p.character.toLowerCase().includes(q)
-        );
-      });
+      list = list.filter((p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.series.toLowerCase().includes(q) ||
+        p.character.toLowerCase().includes(q)
+      );
     }
 
     // Sort
@@ -62,7 +50,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
     else if (sortBy === 'newest') list.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
 
     return list;
-  }, [query, sortBy, availability, filterBy, categoryFilter]);
+  }, [query, sortBy, categoryFilter, products]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -131,7 +119,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
             <button
               type="submit"
               style={{ background: '#FF2D78', fontFamily: 'Outfit, sans-serif' }}
-              className="px-6 rounded-full text-white text-sm font-600 hover:opacity-90 transition-opacity flex-shrink-0"
+              className="px-6 rounded-full text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0"
             >
               Search
             </button>
@@ -139,15 +127,6 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
 
           {/* Filters row */}
           <div className="flex flex-wrap gap-2 items-center">
-            {/* Filter by field */}
-            <div className="flex gap-1">
-              <Pill label="By Name" active={filterBy === 'name'} onClick={() => setFilterBy('name')} />
-              <Pill label="By Character" active={filterBy === 'character'} onClick={() => setFilterBy('character')} />
-              <Pill label="By Anime" active={filterBy === 'anime'} onClick={() => setFilterBy('anime')} />
-            </div>
-
-            <div style={{ backgroundColor: '#222228', width: 1, height: 20 }} className="mx-1 hidden sm:block" />
-
             {/* Category */}
             <div className="flex gap-1 flex-wrap">
               {(['all', 'on-hand', 'pre-order'] as const).map((c) => (
@@ -189,7 +168,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
 
       {/* Results */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {!(filterBy === 'anime' && !query.trim()) && (
+        {!!query.trim() && (
           <div className="flex items-center justify-between mb-5">
             <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif' }} className="text-sm">
               {results.length === 0
@@ -199,9 +178,9 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
           </div>
         )}
 
-        {filterBy === 'anime' && !query.trim() ? (
+        {!query.trim() ? (
           <AnimeBrowser
-            key={`${categoryFilter}-${availability}`}
+            key={categoryFilter}
             products={results}
             onView={onView}
             onAddToCart={onAddToCart}
