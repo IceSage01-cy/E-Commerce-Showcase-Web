@@ -25,6 +25,11 @@ interface CustomerInfo {
   notes: string;
 }
 
+interface ReceiptMeta {
+  receiptNo: string;
+  dateStr: string;
+}
+
 const PAYMENT_OPTIONS = ['Pre-Order', 'Cash on Pickup'];
 
 const S = {
@@ -135,6 +140,14 @@ export default function CartPage({
   });
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // FIX 1: receipt number + date are now generated once (when the customer
+  // reaches the receipt step) and stored in state, instead of being
+  // recomputed inline on every render. Previously `Date.now()` and
+  // `new Date()` ran fresh on every re-render (e.g. after clicking "Copy"
+  // or "Download", which flip `copied`/`downloading` state), so the
+  // receipt number and date shown on screen could silently change after
+  // the customer had already copied or downloaded a different value.
+  const [receiptMeta, setReceiptMeta] = useState<ReceiptMeta | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // Aggregate by product id
@@ -148,14 +161,9 @@ export default function CartPage({
     (s, i) => s + (i.product.salePrice ?? i.product.price) * i.qty,
     0
   );
-  const receiptNo = `PA-${Date.now().toString().slice(-6)}`;
-  const dateStr = new Date().toLocaleDateString('en-PH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+
+  const receiptNo = receiptMeta?.receiptNo ?? '';
+  const dateStr = receiptMeta?.dateStr ?? '';
   const receiptText = buildReceiptText(items, info, total, receiptNo, dateStr);
 
   function setI<K extends keyof CustomerInfo>(key: K, val: CustomerInfo[K]) {
@@ -166,6 +174,22 @@ export default function CartPage({
     Boolean(info.name.trim()) &&
     Boolean(info.contact.trim()) &&
     Boolean(info.address.trim());
+
+  // FIX 1 (cont.): generate the receipt number/date exactly once, at the
+  // moment the customer moves into the receipt step.
+  function goToReceipt() {
+    setReceiptMeta({
+      receiptNo: `PA-${Date.now().toString().slice(-6)}`,
+      dateStr: new Date().toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    });
+    setStep('receipt');
+  }
 
   function copyReceipt() {
     navigator.clipboard.writeText(receiptText).then(() => {
@@ -200,7 +224,16 @@ export default function CartPage({
               reader.onerror = reject;
               reader.readAsDataURL(blob);
             });
-            img.src = dataUrl;
+            // FIX 2: wait for the swapped-in data URL to actually finish
+            // loading/decoding before moving on. Previously `img.src =
+            // dataUrl` was fire-and-forget, so html2canvas could snapshot
+            // the receipt before the new image had painted, producing
+            // blank or half-rendered thumbnails intermittently.
+            await new Promise<void>((resolve) => {
+              img.onload = () => resolve();
+              img.onerror = () => resolve(); // don't hang forever on a bad image
+              img.src = dataUrl;
+            });
           } catch {
             // Leave this one image as-is; html2canvas will just skip it
             // rather than fail the whole capture.
@@ -701,7 +734,7 @@ export default function CartPage({
               ← Back
             </button>
             <button
-              onClick={() => setStep('receipt')}
+              onClick={goToReceipt}
               disabled={!detailsValid}
               style={{
                 background: detailsValid ? S.primary : S.border,
