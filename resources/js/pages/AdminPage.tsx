@@ -208,18 +208,6 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
             Admin
           </span>
         </div>
-        <div className="flex-1" />
-        <button
-          onClick={() => onNavigate('home')}
-          style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 12 }}
-          className="flex items-center gap-1.5 hover:text-[#F0F0F4] transition-colors"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M9 11L5 7L9 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Back to Store
-        </button>
-      </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
