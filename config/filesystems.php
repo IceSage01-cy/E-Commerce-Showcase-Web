@@ -62,6 +62,13 @@ return [
 
         // Cloudflare R2 is S3-compatible, so it reuses the 's3' driver
         // with R2's endpoint and credentials.
+        //
+        // 'throw' is intentionally true here (unlike the other disks above):
+        // without it, a failed put() (bad credentials, wrong endpoint, R2
+        // unreachable) returns false instead of throwing, and
+        // UploadController would have nothing to catch — it would return
+        // what looks like a successful upload URL for a file that was
+        // never actually written.
         'r2' => [
             'driver' => 's3',
             'key' => env('R2_ACCESS_KEY_ID'),
@@ -71,7 +78,7 @@ return [
             'url' => env('R2_PUBLIC_URL'), // the public bucket/custom domain URL
             'endpoint' => env('R2_ENDPOINT'), // https://<account_id>.r2.cloudflarestorage.com
             'use_path_style_endpoint' => true,
-            'throw' => false,
+            'throw' => true,
             'report' => false,
         ],
 

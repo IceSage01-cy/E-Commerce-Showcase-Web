@@ -34,13 +34,25 @@ class UploadController extends Controller
         $filename = $folder.'/'.Str::uuid().'.'.($file->extension() ?: 'bin');
 
         try {
-            Storage::disk('r2')->put($filename, file_get_contents($file), 'public');
+            $written = Storage::disk('r2')->put($filename, file_get_contents($file), 'public');
         } catch (\Throwable $e) {
             // With 'throw' => true on the r2 disk, a bad/missing R2_* env
             // var (wrong key, wrong bucket, wrong endpoint) lands here
             // instead of silently returning a URL for a file that was
             // never written.
             Log::error('R2 upload failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'Upload failed — the storage bucket rejected the file. Check the R2 credentials in your environment settings.',
+            ], 500);
+        }
+
+        // Belt-and-suspenders: put() can return false instead of throwing
+        // (e.g. if 'throw' is ever disabled again, or a cached config from
+        // before this fix is still in play). Never hand back a URL unless
+        // the file actually landed in the bucket.
+        if (! $written) {
+            Log::error('R2 upload returned false without throwing', ['filename' => $filename]);
 
             return response()->json([
                 'message' => 'Upload failed — the storage bucket rejected the file. Check the R2 credentials in your environment settings.',

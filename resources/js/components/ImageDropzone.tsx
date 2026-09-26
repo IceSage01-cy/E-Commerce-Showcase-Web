@@ -51,8 +51,9 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
         uploaded.push(res.data.url);
       }
       onChange(multiple ? [...images, ...uploaded] : uploaded.slice(0, 1));
-    } catch {
-      setError('Upload failed. Try a smaller image (max 5MB).');
+    } catch (err) {
+      const backendMessage = axios.isAxiosError(err) ? err.response?.data?.message : null;
+      setError(backendMessage || 'Upload failed. Try a smaller image (max 5MB).');
     } finally {
       setUploading(false);
     }
