@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Product } from '../data/products';
-import { getStockStatus, formatPrice } from '../data/products';
+import { getStockStyle, formatPrice } from '../data/products';
 import ProductCard from '../components/ProductCard';
 
 interface ProductDetailPageProps {
@@ -10,12 +10,6 @@ interface ProductDetailPageProps {
   onAddToCart: (id: string) => void;
   products: Product[];
 }
-
-const stockColors = {
-  'in-stock': { text: '#22C55E', bg: 'rgba(34,197,94,0.1)', label: 'In Stock' },
-  'low-stock': { text: '#FB923C', bg: 'rgba(251,146,60,0.1)', label: 'Low Stock' },
-  'sold-out': { text: '#606068', bg: 'rgba(96,96,104,0.1)', label: 'Sold Out' },
-};
 
 const categoryLabel = { 'on-hand': 'On Hand', 'pre-order': 'Pre-Order', 'new-release': 'New Release' };
 const categoryColor = {
@@ -49,8 +43,8 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
     );
   }
 
-  const stockStatus = getStockStatus(product.stock);
-  const stockColor = stockColors[stockStatus];
+  const inStock = product.inStock;
+  const stockColor = getStockStyle(inStock);
   const catColor = categoryColor[product.category];
   const related = products.filter((p) => p.id !== product.id && (p.series === product.series || p.category === product.category)).slice(0, 4);
 
@@ -152,7 +146,7 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
                 className="px-3 py-1 rounded-full text-xs font-600 flex items-center gap-1.5"
               >
                 <span style={{ backgroundColor: stockColor.text }} className="w-1.5 h-1.5 rounded-full" />
-                {stockStatus === 'low-stock' ? `Low Stock — ${product.stock} left` : stockColor.label}
+                {stockColor.label}
               </span>
               <span
                 style={{
@@ -294,19 +288,19 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
             {/* CTA */}
             <div className="flex gap-3 pt-1">
               <button
-                disabled={stockStatus === 'sold-out'}
+                disabled={!inStock}
                 onClick={handleAddToCart}
                 style={{
-                  background: stockStatus === 'sold-out' ? '#222228' : added ? '#22C55E' : '#FF2D78',
-                  color: stockStatus === 'sold-out' ? '#50505C' : '#FFFFFF',
+                  background: !inStock ? '#222228' : added ? '#22C55E' : '#FF2D78',
+                  color: !inStock ? '#50505C' : '#FFFFFF',
                   fontFamily: 'Outfit, sans-serif',
                   transition: 'background 0.3s ease',
-                  boxShadow: stockStatus === 'sold-out' ? 'none' : added ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(255,45,120,0.3)',
+                  boxShadow: !inStock ? 'none' : added ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(255,45,120,0.3)',
                 }}
                 className="flex-1 py-3.5 rounded-full text-base font-700 transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed"
               >
-                {stockStatus === 'sold-out'
-                  ? 'Sold Out'
+                {!inStock
+                  ? 'Out of Stock'
                   : added
                   ? '✓ Added!'
                   : product.category === 'pre-order'
@@ -374,7 +368,7 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
       )}
 
       {/* Mobile sticky CTA */}
-      {stockStatus !== 'sold-out' && (
+      {inStock && (
         <div
           style={{ backgroundColor: 'rgba(10,10,11,0.95)', borderTop: '1px solid #1A1A20', backdropFilter: 'blur(12px)' }}
           className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 lg:hidden"

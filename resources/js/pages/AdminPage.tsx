@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Product, Category, Condition } from '../data/products';
-import { getStockStatus, formatPrice } from '../data/products';
+import { getStockStyle, formatPrice } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
 import ImageDropzone from '../components/ImageDropzone';
 
@@ -9,6 +9,7 @@ interface AdminPageProps {
   onAdd: (p: Omit<Product, 'id'>) => void;
   onEdit: (p: Product) => void;
   onDelete: (id: string) => void;
+  onToggleStock: (id: string, inStock: boolean) => void;
   onNavigate: (page: string) => void;
   banners: Banner[];
   onAddBanner: (b: BannerFormData) => void;
@@ -26,11 +27,6 @@ const categoryColor: Record<Category, { text: string; bg: string }> = {
   'pre-order': { text: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
   'new-release': { text: '#A78BFA', bg: 'rgba(167,139,250,0.12)' },
 };
-const stockColors = {
-  'in-stock': { text: '#22C55E', label: 'In Stock' },
-  'low-stock': { text: '#FB923C', label: 'Low Stock' },
-  'sold-out': { text: '#606068', label: 'Sold Out' },
-};
 
 const emptyForm = (): Omit<Product, 'id'> => ({
   name: '',
@@ -41,7 +37,7 @@ const emptyForm = (): Omit<Product, 'id'> => ({
   images: [],
   category: 'on-hand',
   condition: 'New',
-  stock: 0,
+  inStock: true,
   isFeatured: false,
   dateAdded: new Date().toISOString().slice(0, 10),
   description: '',
@@ -51,7 +47,7 @@ const emptyForm = (): Omit<Product, 'id'> => ({
   releaseDate: '',
 });
 
-export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigate, banners, onAddBanner, onEditBanner, onDeleteBanner }: AdminPageProps) {
+export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleStock, onNavigate, banners, onAddBanner, onEditBanner, onDeleteBanner }: AdminPageProps) {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
   const [step, setStep] = useState(0);
@@ -64,11 +60,16 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
   const stats = useMemo(() => {
     const onHand = products.filter((p) => p.category === 'on-hand');
     const preOrder = products.filter((p) => p.category === 'pre-order');
-    const lowStock = products.filter((p) => getStockStatus(p.stock) === 'low-stock');
-    const soldOut = products.filter((p) => getStockStatus(p.stock) === 'sold-out');
     const featured = products.filter((p) => p.isFeatured);
-    const catalogValue = products.reduce((sum, p) => sum + (p.salePrice ?? p.price) * p.stock, 0);
-    return { total: products.length, onHand: onHand.length, preOrder: preOrder.length, lowStock: lowStock.length, soldOut: soldOut.length, featured: featured.length, catalogValue };
+    const outOfStock = products.filter((p) => !p.inStock);
+    return {
+      total: products.length,
+      onHand: onHand.length,
+      preOrder: preOrder.length,
+      inStock: products.length - outOfStock.length,
+      outOfStock,
+      featured: featured.length,
+    };
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -332,15 +333,15 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                   { label: 'Total Listings', value: stats.total, color: '#A78BFA', sub: 'All products' },
                   { label: 'On Hand', value: stats.onHand, color: '#22C55E', sub: 'Local stock' },
                   { label: 'Pre-Orders', value: stats.preOrder, color: '#F59E0B', sub: 'Japan sourced' },
-                  { label: 'Low Stock', value: stats.lowStock, color: '#FB923C', sub: '≤ 3 units left', alert: stats.lowStock > 0 },
-                  { label: 'Sold Out', value: stats.soldOut, color: '#606068', sub: '0 units' },
+                  { label: 'In Stock', value: stats.inStock, color: '#22C55E', sub: 'Available to buy' },
+                  { label: 'Out of Stock', value: stats.outOfStock.length, color: '#80808C', sub: 'Hidden from buying', alert: stats.outOfStock.length > 0 },
                   { label: 'Featured', value: stats.featured, color: '#FF2D78', sub: 'Pinned items' },
                 ].map((k) => (
                   <div
                     key={k.label}
                     style={{
                       backgroundColor: '#141418',
-                      border: k.alert ? `1px solid rgba(251,146,60,0.3)` : '1px solid #222228',
+                      border: k.alert ? '1px solid rgba(128,128,140,0.35)' : '1px solid #222228',
                       borderRadius: '0.875rem',
                       padding: '16px',
                     }}
@@ -352,59 +353,30 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                 ))}
               </div>
 
-              {/* Catalog value */}
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,45,120,0.08) 0%, rgba(168,85,247,0.08) 100%)',
-                  border: '1px solid rgba(255,45,120,0.15)',
-                  borderRadius: '0.875rem',
-                  padding: '20px 24px',
-                  marginBottom: 24,
-                }}
-              >
-                <p style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="uppercase tracking-wider font-500 mb-1">Estimated Catalog Value (at current prices × stock)</p>
-                <p style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 36 }} className="font-800">{formatPrice(stats.catalogValue)}</p>
-              </div>
-
-              {/* Low stock alert table */}
-              {stats.lowStock > 0 && (
+              {/* Out-of-stock list with one-click restock */}
+              {stats.outOfStock.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span style={{ color: '#FB923C' }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M7 2L13 12H1L7 2Z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
-                        <path d="M7 6V8.5M7 10.5V11" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-                      </svg>
-                    </span>
-                    <p style={{ color: '#FB923C', fontFamily: 'Outfit, sans-serif', fontSize: 13 }} className="font-600">Low Stock Alerts</p>
-                  </div>
-                  <div
-                    style={{ backgroundColor: '#141418', border: '1px solid rgba(251,146,60,0.2)', borderRadius: '0.75rem', overflow: 'hidden' }}
-                  >
-                    {products
-                      .filter((p) => getStockStatus(p.stock) === 'low-stock')
-                      .map((p, i, arr) => (
-                        <div
-                          key={p.id}
-                          style={{ borderBottom: i < arr.length - 1 ? '1px solid #1A1A20' : 'none', padding: '10px 16px' }}
-                          className="flex items-center justify-between gap-4"
-                        >
-                          <div>
-                            <p style={{ color: '#F0F0F4', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="font-500">{p.name}</p>
-                            <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }}>{p.series}</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span style={{ color: '#FB923C', fontFamily: 'Outfit, sans-serif', fontSize: 15 }} className="font-700">{p.stock} left</span>
-                            <button
-                              onClick={() => { openEdit(p); setTab('products'); }}
-                              style={{ color: '#FF2D78', fontFamily: 'Inter, sans-serif', fontSize: 12 }}
-                              className="font-500 hover:opacity-80 transition-opacity"
-                            >
-                              Edit
-                            </button>
-                          </div>
+                  <p style={{ color: '#80808C', fontFamily: 'Outfit, sans-serif', fontSize: 13 }} className="font-600 mb-3">Out of Stock</p>
+                  <div style={{ backgroundColor: '#141418', border: '1px solid #222228', borderRadius: '0.75rem', overflow: 'hidden' }}>
+                    {stats.outOfStock.map((p, i, arr) => (
+                      <div
+                        key={p.id}
+                        style={{ borderBottom: i < arr.length - 1 ? '1px solid #1A1A20' : 'none', padding: '10px 16px' }}
+                        className="flex items-center justify-between gap-4"
+                      >
+                        <div className="min-w-0">
+                          <p style={{ color: '#F0F0F4', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="font-500 truncate">{p.name}</p>
+                          <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="truncate">{p.series}</p>
                         </div>
-                      ))}
+                        <button
+                          onClick={() => onToggleStock(p.id, true)}
+                          style={{ color: '#22C55E', backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 12, borderRadius: 9999, padding: '4px 12px' }}
+                          className="font-600 hover:opacity-80 transition-opacity flex-shrink-0"
+                        >
+                          Mark In Stock
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -457,12 +429,12 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                     borderBottom: '1px solid #1A1A20',
                     padding: '10px 16px',
                     display: 'grid',
-                    gridTemplateColumns: '2fr 1fr 1fr 80px 80px 80px',
+                    gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 80px 116px 80px',
                     gap: 12,
                     alignItems: 'center',
                   }}
                 >
-                  {['Product', 'Category', 'Condition', 'Price', 'Stock', ''].map((h) => (
+                  {['Product', 'Category', 'Condition', 'Price', 'Availability', ''].map((h) => (
                     <p key={h} style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="uppercase tracking-wider font-500">
                       {h}
                     </p>
@@ -475,8 +447,7 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                   </div>
                 ) : (
                   filteredProducts.map((p, i) => {
-                    const ss = getStockStatus(p.stock);
-                    const sc = stockColors[ss];
+                    const sc = getStockStyle(p.inStock);
                     const cc = categoryColor[p.category];
                     return (
                       <div
@@ -485,7 +456,7 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                           borderBottom: i < filteredProducts.length - 1 ? '1px solid #1A1A20' : 'none',
                           padding: '12px 16px',
                           display: 'grid',
-                          gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 80px 80px 80px',
+                          gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 80px 116px 80px',
                           gap: 12,
                           alignItems: 'center',
                         }}
@@ -535,10 +506,27 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                           )}
                         </div>
 
-                        {/* Stock */}
+                        {/* Availability: one-click toggle */}
                         <div>
-                          <p style={{ color: sc.text, fontFamily: 'Outfit, sans-serif', fontSize: 14 }} className="font-700">{p.stock}</p>
-                          <p style={{ color: sc.text, fontFamily: 'Inter, sans-serif', fontSize: 10, opacity: 0.7 }}>{sc.label}</p>
+                          <button
+                            onClick={() => onToggleStock(p.id, !p.inStock)}
+                            title={p.inStock ? 'Click to mark Out of Stock' : 'Click to mark In Stock'}
+                            aria-pressed={p.inStock}
+                            style={{
+                              color: sc.text,
+                              backgroundColor: sc.bg,
+                              border: `1px solid ${p.inStock ? 'rgba(34,197,94,0.3)' : '#2A2A32'}`,
+                              fontFamily: 'Outfit, sans-serif',
+                              fontSize: 11,
+                              padding: '5px 10px',
+                              borderRadius: 9999,
+                              whiteSpace: 'nowrap',
+                            }}
+                            className="font-700 flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition-all"
+                          >
+                            <span style={{ backgroundColor: sc.text }} className="w-1.5 h-1.5 rounded-full inline-block" />
+                            {sc.label}
+                          </button>
                         </div>
 
                         {/* Actions */}
@@ -762,15 +750,33 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Stock Qty *">
-                      <input
-                        style={inputStyle}
-                        type="number"
-                        min={0}
-                        value={form.stock}
-                        onChange={(e) => set('stock', Number(e.target.value))}
-                        placeholder="0"
-                      />
+                    <Field label="Availability *">
+                      <div className="flex gap-2">
+                        {([true, false] as const).map((val) => {
+                          const st = getStockStyle(val);
+                          const active = form.inStock === val;
+                          return (
+                            <button
+                              key={String(val)}
+                              type="button"
+                              onClick={() => set('inStock', val)}
+                              style={{
+                                flex: 1,
+                                color: active ? st.text : '#50505C',
+                                backgroundColor: active ? st.bg : '#0D0D10',
+                                border: `1px solid ${active ? (val ? 'rgba(34,197,94,0.4)' : '#3A3A44') : '#222228'}`,
+                                fontFamily: 'Outfit, sans-serif',
+                                fontSize: 12,
+                                borderRadius: '0.5rem',
+                                padding: '8px 10px',
+                              }}
+                              className="font-700 transition-all"
+                            >
+                              {st.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </Field>
                     <Field label="Scale">
                       <input style={inputStyle} value={form.scale ?? ''} onChange={(e) => set('scale', e.target.value)} placeholder="1/7" />
@@ -832,7 +838,7 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onNavigat
                   <div style={{ backgroundColor: '#0D0D10', border: '1px solid #1A1A20', borderRadius: '0.625rem', padding: '12px 14px' }} className="flex flex-col gap-1.5">
                     <p style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 12 }} className="font-600 mb-0.5">Ready to save</p>
                     <p style={{ fontFamily: 'Inter, sans-serif', color: '#80808C', fontSize: 12 }}>
-                      {form.name || '(untitled)'} — {form.series || '(no series)'} · {formatPrice(form.price)}{form.salePrice ? ` (sale ${formatPrice(form.salePrice)})` : ''} · {form.stock} in stock · {form.images.filter(Boolean).length} photo{form.images.filter(Boolean).length === 1 ? '' : 's'}
+                      {form.name || '(untitled)'} — {form.series || '(no series)'} · {formatPrice(form.price)}{form.salePrice ? ` (sale ${formatPrice(form.salePrice)})` : ''} · {form.inStock ? 'In stock' : 'Out of stock'} · {form.images.filter(Boolean).length} photo{form.images.filter(Boolean).length === 1 ? '' : 's'}
                     </p>
                   </div>
                 </>

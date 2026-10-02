@@ -4,7 +4,6 @@
 
 export type Category = 'on-hand' | 'pre-order' | 'new-release';
 export type Condition = 'New' | 'Pre-owned' | 'Loose' | 'Sealed';
-export type StockStatus = 'in-stock' | 'low-stock' | 'sold-out';
 
 export interface Product {
   id: string;
@@ -16,7 +15,7 @@ export interface Product {
   images: string[];
   category: Category;
   condition: Condition;
-  stock: number;
+  inStock: boolean;
   isFeatured: boolean;
   dateAdded: string;
   description: string;
@@ -26,10 +25,14 @@ export interface Product {
   estimatedArrival?: string | null;
 }
 
-export function getStockStatus(stock: number): StockStatus {
-  if (stock === 0) return 'sold-out';
-  if (stock <= 3) return 'low-stock';
-  return 'in-stock';
+/** Single source of truth for how availability is labelled/coloured everywhere (storefront + admin). */
+export const stockStyle = {
+  in: { text: '#22C55E', bg: 'rgba(34,197,94,0.1)', label: 'In Stock' },
+  out: { text: '#606068', bg: 'rgba(96,96,104,0.12)', label: 'Out of Stock' },
+} as const;
+
+export function getStockStyle(inStock: boolean) {
+  return inStock ? stockStyle.in : stockStyle.out;
 }
 
 export function formatPrice(price: number): string {

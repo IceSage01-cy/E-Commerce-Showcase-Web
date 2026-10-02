@@ -6,6 +6,8 @@ interface ImageDropzoneProps {
   onChange: (images: string[]) => void;
   multiple?: boolean;
   label?: string;
+  /** Sub-folder in the storage bucket, e.g. "products" or "banners". */
+  folder?: string;
 }
 
 /**
@@ -13,7 +15,7 @@ interface ImageDropzoneProps {
  * the server — no more pasting image URLs by hand. Uploaded thumbnails can be
  * dragged to reorder, or removed with the × button.
  */
-export default function ImageDropzone({ images, onChange, multiple = true, label }: ImageDropzoneProps) {
+export default function ImageDropzone({ images, onChange, multiple = true, label, folder }: ImageDropzoneProps) {
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
       for (const file of list) {
         const formData = new FormData();
         formData.append('file', file);
+        if (folder) formData.append('folder', folder);
         const res = await axios.post('/admin/api/uploads', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });

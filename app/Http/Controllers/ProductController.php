@@ -29,7 +29,7 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query->orderByDesc('date_added')->get()->map->toFrontend();
+        $products = $query->orderByDesc('date_added')->orderByDesc('id')->get()->map->toFrontend();
 
         return response()->json($products);
     }

@@ -6,6 +6,16 @@ import AdminPage from './pages/AdminPage';
 import type { Banner, BannerFormData } from './components/BannersTab';
 import type { Product } from './data/products';
 
+/** Pull the most useful message out of a Laravel error response (validation errors first). */
+function apiError(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const errors = err.response?.data?.errors as Record<string, string[]> | undefined;
+    if (errors) return Object.values(errors).flat().join('\n');
+    if (err.response?.data?.message) return String(err.response.data.message);
+  }
+  return fallback;
+}
+
 function AdminRoot() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -21,7 +31,7 @@ function AdminRoot() {
       setProducts((prev) => [res.data, ...prev]);
     } catch (err) {
       console.error('Failed to add product', err);
-      alert('Could not save the product. Please check the form and try again.');
+      alert(apiError(err, 'Could not save the product. Please check the form and try again.'));
     }
   }
 
@@ -32,13 +42,33 @@ function AdminRoot() {
       setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)));
     } catch (err) {
       console.error('Failed to update product', err);
-      alert('Could not save the product. Please check the form and try again.');
+      alert(apiError(err, 'Could not save the product. Please check the form and try again.'));
     }
   }
 
   async function handleDeleteProduct(id: string) {
-    await axios.delete(`/admin/api/products/${id}`);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await axios.delete(`/admin/api/products/${id}`);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error('Failed to delete product', err);
+      alert(apiError(err, 'Could not delete the product. Please try again.'));
+    }
+  }
+
+  // Optimistic: flip the badge instantly, tell the server, roll back if it fails.
+  async function handleToggleStock(id: string, inStock: boolean) {
+    const setFlag = (value: boolean) =>
+      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, inStock: value } : p)));
+
+    setFlag(inStock);
+    try {
+      await axios.patch(`/admin/api/products/${id}/stock`, { inStock });
+    } catch (err) {
+      setFlag(!inStock);
+      console.error('Failed to update stock status', err);
+      alert(apiError(err, 'Could not update stock status. Please try again.'));
+    }
   }
 
   async function handleAddBanner(data: BannerFormData) {
@@ -62,6 +92,7 @@ function AdminRoot() {
       onAdd={handleAddProduct}
       onEdit={handleEditProduct}
       onDelete={handleDeleteProduct}
+      onToggleStock={handleToggleStock}
       banners={banners}
       onAddBanner={handleAddBanner}
       onEditBanner={handleEditBanner}

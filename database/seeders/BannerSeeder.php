@@ -42,8 +42,10 @@ class BannerSeeder extends Seeder
             ],
         ];
 
+        // Idempotent: banners are identified by title. Re-running only inserts missing
+        // ones and never overwrites banners edited in the admin panel.
         foreach ($banners as $banner) {
-            Banner::create($banner);
+            Banner::firstOrCreate(['title' => $banner['title']], $banner);
         }
     }
 }

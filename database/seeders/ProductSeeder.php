@@ -21,7 +21,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'Sealed',
-                'stock' => 2,
+                'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-15',
                 'description' => 'The iconic Hatsune Miku 1/7 scale figure in her signature outfit, featuring incredible detail on the twin tails and outfit embroidery. Perfect centerpiece for any Vocaloid collection. Comes in original sealed packaging with original box art.',
@@ -40,7 +40,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'New',
-                'stock' => 5,
+                'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-12',
                 'description' => 'Dragon Ball Super Goku Super Saiyan God form with dynamic energy aura base. This figure captures the iconic "Super Saiyan God" transformation with vivid red hair and flowing red aura effects. Highly detailed sculpt with premium paint finish.',
@@ -58,7 +58,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'pre-order',
                 'condition' => 'Sealed',
-                'stock' => 10,
+                'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-10',
                 'description' => 'The legendary EVA Unit-01 in its terrifying Awakening Mode stance. This premium figure features LED light-up eyes, interchangeable parts, and a stunning energy wings effect. An absolute must-have for any Evangelion collector.',
@@ -77,7 +77,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'New',
-                'stock' => 3,
+                'in_stock' => true,
                 'is_featured' => false,
                 'date_added' => '2026-09-18',
                 'description' => 'Rem in her stunning Ice Flower variant, dressed in a beautiful ice-blue floral kimono with her signature horns adorned with frost crystals. A breathtaking 1/7 scale figure with exceptional paint detail and dynamic pose.',
@@ -95,7 +95,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'New',
-                'stock' => 8,
+                'in_stock' => true,
                 'is_featured' => false,
                 'date_added' => '2026-09-17',
                 'description' => 'Naruto in his iconic Sage Mode from the epic Ninja World War arc. Features natural energy aura effects around his feet, signature orange outfit with detailed mesh underlayer, and his characteristic sage eye markings painted with precision.',
@@ -113,7 +113,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'pre-order',
                 'condition' => 'Sealed',
-                'stock' => 15,
+                'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-08',
                 'description' => 'The newest and most powerful form of the King of Pirates — Gear 5 Luffy in his Sun God Nika awakening! White hair, white clothing, and surrounded by his cartoonish cloud-like aura. A monumental addition to any One Piece collection.',
@@ -133,7 +133,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'New',
-                'stock' => 1,
+                'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-05',
                 'description' => 'Complete set featuring Itadori Yuji, Megumi Fushiguro, and Nobara Kugisaki in their school uniforms with their respective weapons/shikigami. Sold as a set only. Last one in stock — collector\'s item.',
@@ -151,7 +151,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'New',
-                'stock' => 4,
+                'in_stock' => true,
                 'is_featured' => false,
                 'date_added' => '2026-09-14',
                 'description' => 'Tanjiro in his iconic Water Breathing Tenth Form pose, with flowing water blade effect. Beautifully captures the moment of his most powerful technique. Highly detailed checkered haori and battle-worn expression.',
@@ -169,7 +169,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'pre-order',
                 'condition' => 'Sealed',
-                'stock' => 20,
+                'in_stock' => true,
                 'is_featured' => false,
                 'date_added' => '2026-09-11',
                 'description' => 'Eren in his Attack Titan transformation, featuring bone and muscle structure visible beneath semi-translucent resin skin panels. A complex, multi-material figure that showcases the brutal beauty of the Attack Titan form.',
@@ -188,7 +188,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'New',
-                'stock' => 12,
+                'in_stock' => true,
                 'is_featured' => false,
                 'date_added' => '2026-09-16',
                 'description' => 'Everyone\'s favorite chainsaw devil dog in his adorable Pochita form, complete with chainsaw handle tail and removable chainsaw protrusion. Small but incredibly detailed. Perfect desk or display companion.',
@@ -207,7 +207,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'pre-order',
                 'condition' => 'Sealed',
-                'stock' => 8,
+                'in_stock' => true,
                 'is_featured' => false,
                 'date_added' => '2026-09-09',
                 'description' => 'Zero Two in her skin-tight red pilot suit with characteristic horns and flowing pink hair. This premium figure features a dynamic standing pose with wind effect on her hair and suit panels. A definitive Zero Two figure for serious collectors.',
@@ -226,7 +226,7 @@ class ProductSeeder extends Seeder
                 ],
                 'category' => 'on-hand',
                 'condition' => 'Pre-owned',
-                'stock' => 1,
+                'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-03',
                 'description' => 'Rare vintage collection of classic Japanese tokusatsu hero figures from the 1970s-80s. Includes Ultraman, Kamen Rider, and Super Sentai figures in excellent pre-owned condition. Original paint, minor display wear consistent with age. A true collector\'s treasure.',
@@ -235,8 +235,18 @@ class ProductSeeder extends Seeder
             ],
         ];
 
+        // Idempotent: a product is identified by name + series + condition. Re-running the
+        // seeder only inserts rows that are missing. It never duplicates a row and never
+        // overwrites edits made in the admin panel (e.g. an item toggled to Out of Stock).
         foreach ($products as $product) {
-            Product::create($product);
+            Product::firstOrCreate(
+                [
+                    'name' => $product['name'],
+                    'series' => $product['series'],
+                    'condition' => $product['condition'],
+                ],
+                $product,
+            );
         }
     }
 }

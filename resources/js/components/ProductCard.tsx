@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import type { Product } from '../data/products';
-import { getStockStatus, formatPrice } from '../data/products';
+import { getStockStyle, formatPrice } from '../data/products';
 
 interface ProductCardProps {
   product: Product;
@@ -15,18 +15,11 @@ const categoryColor = {
   'pre-order': { text: '#F59E0B', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
   'new-release': { text: '#A78BFA', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.25)' },
 };
-const stockColors = {
-  'in-stock': { text: '#22C55E', label: 'In Stock' },
-  'low-stock': { text: '#FB923C', label: 'Low Stock' },
-  'sold-out': { text: '#606068', label: 'Sold Out' },
-};
-
-export default function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardProps) {
+function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const stockStatus = getStockStatus(product.stock);
   const catColor = categoryColor[product.category];
-  const stockColor = stockColors[stockStatus];
+  const stockColor = getStockStyle(product.inStock);
 
   return (
     <div
@@ -116,7 +109,7 @@ export default function ProductCard({ product, onView, onAddToCart, size = 'md' 
         </div>
 
         {/* Quick add overlay */}
-        {stockStatus !== 'sold-out' && onAddToCart && (
+        {product.inStock && onAddToCart && (
           <div
             className="absolute inset-x-0 bottom-0 flex items-center justify-center pb-3 transition-all duration-200"
             style={{ opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(8px)' }}
@@ -179,7 +172,7 @@ export default function ProductCard({ product, onView, onAddToCart, size = 'md' 
               style={{ backgroundColor: stockColor.text }}
               className="w-1.5 h-1.5 rounded-full inline-block"
             />
-            {stockStatus === 'low-stock' ? `Low Stock (${product.stock} left)` : stockColor.label}
+            {stockColor.label}
           </span>
         </div>
 
@@ -217,3 +210,7 @@ export default function ProductCard({ product, onView, onAddToCart, size = 'md' 
     </div>
   );
 }
+
+// memo: a card only re-renders when its own product (or the stable handlers) change,
+// not on every cart/toast update in <App>.
+export default memo(ProductCard);

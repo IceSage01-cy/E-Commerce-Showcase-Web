@@ -24,11 +24,11 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
   const results = useMemo(() => {
     let list = [...products];
 
-    // Category filter (on-hand items also require stock > 0 to count as available)
+    // Category filter (on-hand items must also be in stock to count as available)
     if (categoryFilter !== 'all') {
       list = list.filter((p) =>
         p.category === categoryFilter &&
-        (categoryFilter !== 'on-hand' || p.stock > 0)
+        (categoryFilter !== 'on-hand' || p.inStock)
       );
     }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axios from 'axios';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -23,6 +23,7 @@ export default function App() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [cart, setCart] = useState<string[]>([]);
   const [cartToast, setCartToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     axios.get('/api/products').then((res) => {
@@ -45,9 +46,9 @@ export default function App() {
     }
   }
 
-  function viewProduct(id: string) {
+  const viewProduct = useCallback((id: string) => {
     setRoute({ type: 'product', id });
-  }
+  }, []);
 
   function handleSearch(query: string, category?: string) {
     setRoute({ type: 'search', query, category });
@@ -65,14 +66,21 @@ export default function App() {
     setCart([]);
   }
 
-  function addToCart(id: string) {
+  // Stable identity so memoised <ProductCard>s don't re-render on every cart/toast change.
+  const addToCart = useCallback((id: string) => {
+    const product = products.find((x) => x.id === id);
+    if (product && !product.inStock) return; // out-of-stock items can never enter the cart
     setCart((prev) => [...prev, id]);
-    const p = products.find((x) => x.id === id);
-    setCartToast(p?.name ?? 'Item');
-    setTimeout(() => setCartToast(null), 3000);
-  }
+    setCartToast(product?.name ?? 'Item');
+    // Reset the timer so a quick second add doesn't get its toast cut short by the first one.
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setCartToast(null), 3000);
+  }, [products]);
 
-  const sortedNew = [...products].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
+  const sortedNew = useMemo(
+    () => [...products].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
+    [products],
+  );
 
   return (
     <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>

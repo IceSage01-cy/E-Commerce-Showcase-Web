@@ -40,7 +40,7 @@ class ProductFactory extends Factory
             'images' => $this->faker->randomElements(self::STOCK_IMAGES, 2),
             'category' => $category,
             'condition' => $this->faker->randomElement(['New', 'Sealed', 'Pre-owned']),
-            'stock' => $this->faker->numberBetween(0, 20),
+            'in_stock' => $this->faker->boolean(85),
             'is_featured' => $this->faker->boolean(20),
             'date_added' => $this->faker->dateTimeBetween('-3 months', 'now')->format('Y-m-d'),
             'description' => $this->faker->paragraph(3),

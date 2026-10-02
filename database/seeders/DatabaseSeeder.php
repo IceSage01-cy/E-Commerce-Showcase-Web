@@ -15,12 +15,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            User::factory()->raw(['name' => 'Test User'])
-        );
+        // Dev-only convenience account. (Previously this used User::factory()->raw(), whose random
+        // email overrode the lookup key, so a brand-new user was created on every run.)
+        // The admin panel does not use this table; it logs in with ADMIN_PASSWORD.
+        if (! app()->isProduction()) {
+            User::firstOrCreate(
+                ['email' => 'test@example.com'],
+                ['name' => 'Test User', 'password' => 'password'],
+            );
+        }
 
         $this->call([
             BannerSeeder::class,

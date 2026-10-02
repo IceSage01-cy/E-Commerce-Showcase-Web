@@ -45,6 +45,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminProductController::class, 'index'])->name('index');
             Route::post('/', [AdminProductController::class, 'store'])->name('store');
             Route::put('/{product}', [AdminProductController::class, 'update'])->name('update');
+            Route::patch('/{product}/stock', [AdminProductController::class, 'setStock'])->name('stock');
             Route::delete('/{product}', [AdminProductController::class, 'destroy'])->name('destroy');
         });
 
