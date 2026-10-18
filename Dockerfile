@@ -48,9 +48,21 @@ COPY --from=assets /app/public/build ./public/build
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-# Start script (strip Windows line endings just in case)
-COPY docker/start.sh /usr/local/bin/start.sh
-RUN sed -i 's/\r$//' /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
+# Start script, written right here so there is no separate file to forget to commit.
+# (Environment variables only exist at runtime, so caching happens when the container starts.)
+# Set RUN_MIGRATIONS=true in Render to create/update tables on deploy.
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -e' \
+    'cd /var/www/html' \
+    'php artisan package:discover --ansi' \
+    'php artisan config:cache' \
+    'php artisan view:cache' \
+    'if [ "$RUN_MIGRATIONS" = "true" ]; then php artisan migrate --force; fi' \
+    'chown -R www-data:www-data storage bootstrap/cache' \
+    'exec apache2-foreground' \
+    > /usr/local/bin/start.sh \
+    && chmod +x /usr/local/bin/start.sh
 
 EXPOSE 10000
 CMD ["/usr/local/bin/start.sh"]
