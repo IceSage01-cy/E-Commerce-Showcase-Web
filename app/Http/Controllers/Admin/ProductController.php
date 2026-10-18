@@ -27,8 +27,11 @@ class ProductController extends Controller
             'salePrice' => 'nullable|numeric|min:0',
             'images' => 'array',
             'images.*' => 'string|url|max:2048',
+            // Listing type (availability): on-hand / pre-order / new-release.
             'category' => 'required|string|in:on-hand,pre-order,new-release',
-            'condition' => 'required|string|in:New,Pre-owned,Loose,Sealed',
+            // Main storefront category: Anime Figures / Scale Figures / Rare-Exclusive / CHIX Figures.
+            'collection' => ['required', 'string', Rule::in(array_column(config('catalog.collections'), 'slug'))],
+            'condition' => ['required', 'string', Rule::in(config('catalog.conditions'))],
             'inStock' => 'required|boolean',
             'isFeatured' => 'boolean',
             'dateAdded' => 'nullable|date',
@@ -54,6 +57,7 @@ class ProductController extends Controller
             'sale_price' => $data['salePrice'] ?? null,
             'images' => array_values(array_filter($data['images'] ?? [])),
             'category' => $data['category'],
+            'collection' => $data['collection'],
             'condition' => $data['condition'],
             'in_stock' => $data['inStock'],
             'is_featured' => $data['isFeatured'] ?? false,
@@ -68,7 +72,8 @@ class ProductController extends Controller
 
     public function index(): JsonResponse
     {
-        $products = Product::orderByDesc('date_added')->get()->map->toFrontend();
+        // Most recently changed first, so a product you just edited (or toggled) is at the top of the list.
+        $products = Product::orderByDesc('updated_at')->orderByDesc('id')->get()->map->toFrontend();
 
         return response()->json($products);
     }
@@ -96,6 +101,51 @@ class ProductController extends Controller
         $product->update(['in_stock' => $data['inStock']]);
 
         return response()->json($product->toFrontend());
+    }
+
+    /** One-click Featured ("Japan New Arrivals") switch used by the admin table. */
+    public function setFeatured(Request $request, Product $product): JsonResponse
+    {
+        $data = $request->validate(['isFeatured' => 'required|boolean']);
+        $product->update(['is_featured' => $data['isFeatured']]);
+
+        return response()->json($product->toFrontend());
+    }
+
+    /**
+     * Apply one action to many products at once, so large batches don't need one
+     * edit form per product.
+     */
+    public function bulk(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => 'required|array|min:1|max:1000',
+            'ids.*' => 'integer',
+            'action' => ['required', Rule::in(['feature', 'unfeature', 'in_stock', 'out_of_stock', 'delete'])],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $data['ids'])));
+
+        if ($data['action'] === 'delete') {
+            $deleted = Product::whereIn('id', $ids)->pluck('id')->map(fn ($id) => (string) $id)->all();
+            Product::whereIn('id', $ids)->delete();
+
+            return response()->json(['deleted' => $deleted]);
+        }
+
+        $changes = match ($data['action']) {
+            'feature' => ['is_featured' => true],
+            'unfeature' => ['is_featured' => false],
+            'in_stock' => ['in_stock' => true],
+            'out_of_stock' => ['in_stock' => false],
+        };
+
+        // Query-builder updates don't touch updated_at on their own; set it so these float to the top of the list.
+        Product::whereIn('id', $ids)->update($changes + ['updated_at' => now()]);
+
+        return response()->json([
+            'products' => Product::whereIn('id', $ids)->orderByDesc('id')->get()->map->toFrontend(),
+        ]);
     }
 
     public function destroy(Product $product): JsonResponse

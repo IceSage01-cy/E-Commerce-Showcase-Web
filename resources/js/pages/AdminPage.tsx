@@ -1,25 +1,30 @@
-import { useState, useMemo } from 'react';
-import type { Product, Category, Condition } from '../data/products';
-import { getStockStyle, formatPrice } from '../data/products';
+import { useState, useMemo, useRef } from 'react';
+import type { Product, Category, Condition, Collection, CategoryInfo, BulkAction } from '../data/products';
+import { getStockStyle, formatPrice, CONDITIONS, COLLECTIONS, collectionLabel, normalizeCondition } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
+import CategoriesTab, { type CategoryFormData } from '../components/CategoriesTab';
 import ImageDropzone from '../components/ImageDropzone';
 
 interface AdminPageProps {
   products: Product[];
-  onAdd: (p: Omit<Product, 'id'>) => void;
-  onEdit: (p: Product) => void;
+  onAdd: (p: Omit<Product, 'id'>) => Promise<boolean>;
+  onEdit: (p: Product) => Promise<boolean>;
   onDelete: (id: string) => void;
   onToggleStock: (id: string, inStock: boolean) => void;
+  onToggleFeatured: (id: string, isFeatured: boolean) => void;
+  onBulk: (ids: string[], action: BulkAction) => Promise<boolean>;
   onNavigate: (page: string) => void;
+  categories: CategoryInfo[];
+  onEditCategory: (id: string, data: CategoryFormData) => Promise<boolean>;
   banners: Banner[];
   onAddBanner: (b: BannerFormData) => void;
   onEditBanner: (id: string, b: BannerFormData) => void;
   onDeleteBanner: (id: string) => void;
 }
 
-type Tab = 'dashboard' | 'products' | 'banners' | 'orders';
+type Tab = 'dashboard' | 'products' | 'categories' | 'banners' | 'orders';
 
-const CONDITIONS: Condition[] = ['New', 'Pre-owned', 'Loose', 'Sealed'];
+/** Listing type = how the item is sold. (The main storefront category is `collection`.) */
 const CATEGORIES: Category[] = ['on-hand', 'pre-order', 'new-release'];
 const categoryLabel: Record<Category, string> = { 'on-hand': 'On Hand', 'pre-order': 'Pre-Order', 'new-release': 'New Release' };
 const categoryColor: Record<Category, { text: string; bg: string }> = {
@@ -28,7 +33,9 @@ const categoryColor: Record<Category, { text: string; bg: string }> = {
   'new-release': { text: '#A78BFA', bg: 'rgba(167,139,250,0.12)' },
 };
 
-const emptyForm = (): Omit<Product, 'id'> => ({
+const COLS = '28px minmax(0,2.2fr) minmax(0,1.3fr) 64px 84px 116px 104px 72px';
+
+const emptyForm = (collection: Collection = 'anime-figures'): Omit<Product, 'id'> => ({
   name: '',
   series: '',
   character: '',
@@ -36,7 +43,8 @@ const emptyForm = (): Omit<Product, 'id'> => ({
   salePrice: undefined,
   images: [],
   category: 'on-hand',
-  condition: 'New',
+  collection,
+  condition: 'MIB',
   inStock: true,
   isFeatured: false,
   dateAdded: new Date().toISOString().slice(0, 10),
@@ -47,14 +55,24 @@ const emptyForm = (): Omit<Product, 'id'> => ({
   releaseDate: '',
 });
 
-export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleStock, onNavigate, banners, onAddBanner, onEditBanner, onDeleteBanner }: AdminPageProps) {
+export default function AdminPage({
+  products, onAdd, onEdit, onDelete, onToggleStock, onToggleFeatured, onBulk, onNavigate,
+  categories, onEditCategory, banners, onAddBanner, onEditBanner, onDeleteBanner,
+}: AdminPageProps) {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
-  const [step, setStep] = useState(0);
   const [form, setForm] = useState<Omit<Product, 'id'>>(emptyForm());
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | 'bulk' | null>(null);
   const [search, setSearch] = useState('');
+  const [collectionFilter, setCollectionFilter] = useState<string>('all');
+  const [featuredFilter, setFeaturedFilter] = useState<'all' | 'featured' | 'not-featured'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Multi-select for bulk actions
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const lastClicked = useRef<number | null>(null);
 
   // Dashboard stats
   const stats = useMemo(() => {
@@ -73,39 +91,89 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    if (!search.trim()) return products;
-    const q = search.toLowerCase();
-    return products.filter((p) => p.name.toLowerCase().includes(q) || p.series.toLowerCase().includes(q) || p.character.toLowerCase().includes(q));
-  }, [products, search]);
+    const q = search.trim().toLowerCase();
+    return products.filter((p) => {
+      if (collectionFilter !== 'all' && p.collection !== collectionFilter) return false;
+      if (featuredFilter === 'featured' && !p.isFeatured) return false;
+      if (featuredFilter === 'not-featured' && p.isFeatured) return false;
+      if (!q) return true;
+      return p.name.toLowerCase().includes(q) || p.series.toLowerCase().includes(q) || p.character.toLowerCase().includes(q);
+    });
+  }, [products, search, collectionFilter, featuredFilter]);
+
+  // Only count ticks for products that still exist (a delete elsewhere can't leave a phantom selection).
+  const selectedIds = useMemo(() => products.filter((p) => selected.has(p.id)).map((p) => p.id), [products, selected]);
+  const allSelected = filteredProducts.length > 0 && filteredProducts.every((p) => selected.has(p.id));
+  const someSelected = filteredProducts.some((p) => selected.has(p.id));
+
+  function toggleSelect(id: string, index: number, shift: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (shift && lastClicked.current !== null) {
+        // Shift-click: tick (or untick) everything between the last click and this one.
+        const [from, to] = [lastClicked.current, index].sort((a, b) => a - b);
+        const turnOn = !prev.has(id);
+        for (let i = from; i <= to; i++) {
+          const pid = filteredProducts[i]?.id;
+          if (!pid) continue;
+          if (turnOn) next.add(pid); else next.delete(pid);
+        }
+      } else if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+    lastClicked.current = index;
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) filteredProducts.forEach((p) => next.delete(p.id));
+      else filteredProducts.forEach((p) => next.add(p.id));
+      return next;
+    });
+  }
+
+  async function runBulk(action: BulkAction) {
+    if (selectedIds.length === 0) return;
+    setBulkBusy(true);
+    const ok = await onBulk(selectedIds, action);
+    setBulkBusy(false);
+    if (ok) setSelected(new Set());
+  }
 
   function openAdd() {
-    setForm(emptyForm());
-    setStep(0);
+    setForm(emptyForm(COLLECTIONS.find((c) => c.slug === collectionFilter)?.slug));
     setModal({ mode: 'add' });
   }
   function openEdit(p: Product) {
     const { id, ...rest } = p;
-    setForm({ ...rest });
-    setStep(0);
+    setForm({ ...rest, condition: normalizeCondition(rest.condition) });
     setModal({ mode: 'edit', product: p });
   }
-  function saveForm() {
-    if (!form.name.trim() || !form.series.trim() || form.price <= 0) return;
-    if (modal?.mode === 'edit' && modal.product) {
-      onEdit({ id: modal.product.id, ...form });
-    } else {
-      onAdd(form);
-    }
-    setModal(null);
+
+  const missing = [
+    !form.name.trim() && 'name',
+    !form.series.trim() && 'series',
+    !(form.price > 0) && 'price',
+  ].filter(Boolean) as string[];
+
+  async function saveForm() {
+    if (missing.length > 0 || saving) return;
+    setSaving(true);
+    const ok = modal?.mode === 'edit' && modal.product
+      ? await onEdit({ id: modal.product.id, ...form })
+      : await onAdd(form);
+    setSaving(false);
+    // Stay open (with everything you typed) if the server rejected it.
+    if (ok) setModal(null);
   }
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
-
-  const STEPS = ['Basics', 'Photos', 'Pricing & Stock', 'Details'] as const;
-  const step0Valid = form.name.trim() !== '' && form.series.trim() !== '';
-  const step2Valid = form.price > 0;
-  const canGoNext = step === 0 ? step0Valid : step === 2 ? step2Valid : true;
 
   const inputStyle = {
     backgroundColor: '#0D0D10',
@@ -141,6 +209,17 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
           <path d="M2 2H6L8 6H14L12 11H4L2 2Z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
           <circle cx="5" cy="13.5" r="1.5" fill="currentColor" />
           <circle cx="11" cy="13.5" r="1.5" fill="currentColor" />
+        </svg>
+      ),
+    },
+    {
+      id: 'categories',
+      label: 'Categories',
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.25" />
+          <rect x="9" y="1.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.25" />
+          <rect x="1.5" y="9" width="13" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.25" />
         </svg>
       ),
     },
@@ -185,16 +264,9 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
           </svg>
         </button>
         <div className="flex items-center gap-2">
-          <div
-            style={{ background: 'linear-gradient(135deg, #FF2D78, #A855F7)' }}
-            className="w-6 h-6 rounded-md flex items-center justify-center"
-          >
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L14 5V11L8 15L2 11V5L8 1Z" fill="white" />
-            </svg>
-          </div>
+          <img src="/logo.png" alt="" width={28} height={28} className="w-7 h-7 rounded-full flex-shrink-0" />
           <span style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 14 }} className="font-700">
-            Pandas Attic
+            Panda's Attic
           </span>
           <span
             style={{
@@ -335,7 +407,7 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
                   { label: 'Pre-Orders', value: stats.preOrder, color: '#F59E0B', sub: 'Japan sourced' },
                   { label: 'In Stock', value: stats.inStock, color: '#22C55E', sub: 'Available to buy' },
                   { label: 'Out of Stock', value: stats.outOfStock.length, color: '#80808C', sub: 'Hidden from buying', alert: stats.outOfStock.length > 0 },
-                  { label: 'Featured', value: stats.featured, color: '#FF2D78', sub: 'Pinned items' },
+                  { label: 'Japan New Arrivals', value: stats.featured, color: '#FF2D78', sub: 'Shown on the homepage' },
                 ].map((k) => (
                   <div
                     key={k.label}
@@ -385,11 +457,16 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
 
           {/* ── PRODUCTS ── */}
           {tab === 'products' && (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div>
                   <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl font-800">Products</h1>
-                  <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="mt-0.5">{products.length} listings</p>
+                  <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="mt-0.5">
+                    {filteredProducts.length === products.length
+                      ? `${products.length} listings`
+                      : `${filteredProducts.length} of ${products.length} listings`}
+                    {' · most recently changed first'}
+                  </p>
                 </div>
                 <button
                   onClick={openAdd}
@@ -403,161 +480,276 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
                 </button>
               </div>
 
-              {/* Search */}
-              <div className="relative mb-4">
-                <svg
-                  width="14" height="14" viewBox="0 0 14 14" fill="none"
-                  style={{ color: '#50505C', position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+              {/* Search + filters */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                <div className="relative flex-1">
+                  <svg
+                    width="14" height="14" viewBox="0 0 14 14" fill="none"
+                    style={{ color: '#50505C', position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                  >
+                    <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.25" />
+                    <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name, series, character…"
+                    style={{ ...inputStyle, paddingLeft: 32 }}
+                  />
+                </div>
+                <select
+                  value={collectionFilter}
+                  onChange={(e) => setCollectionFilter(e.target.value)}
+                  style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}
+                  aria-label="Filter by category"
                 >
-                  <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.25" />
-                  <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-                </svg>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, series, character…"
-                  style={{ ...inputStyle, paddingLeft: 32 }}
-                />
+                  <option value="all">All categories</option>
+                  {COLLECTIONS.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={featuredFilter}
+                  onChange={(e) => setFeaturedFilter(e.target.value as typeof featuredFilter)}
+                  style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}
+                  aria-label="Filter by Japan New Arrivals"
+                >
+                  <option value="all">Japan New: any</option>
+                  <option value="featured">Japan New: on</option>
+                  <option value="not-featured">Japan New: off</option>
+                </select>
               </div>
 
-              {/* Table */}
-              <div style={{ backgroundColor: '#141418', border: '1px solid #222228', borderRadius: '0.875rem', overflow: 'hidden' }}>
-                {/* Table header */}
+              {/* Bulk action bar: appears as soon as something is ticked */}
+              {selectedIds.length > 0 && (
                 <div
                   style={{
-                    backgroundColor: '#111114',
-                    borderBottom: '1px solid #1A1A20',
-                    padding: '10px 16px',
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 80px 116px 80px',
-                    gap: 12,
-                    alignItems: 'center',
+                    position: 'sticky',
+                    top: 8,
+                    zIndex: 20,
+                    backgroundColor: '#17171C',
+                    border: '1px solid rgba(255,45,120,0.35)',
+                    borderRadius: '0.75rem',
+                    padding: '10px 12px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                   }}
+                  className="flex flex-wrap items-center gap-2 mb-3"
                 >
-                  {['Product', 'Category', 'Condition', 'Price', 'Availability', ''].map((h) => (
-                    <p key={h} style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="uppercase tracking-wider font-500">
-                      {h}
-                    </p>
-                  ))}
+                  <span style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif', fontSize: 13 }} className="font-700 mr-1">
+                    {selectedIds.length} selected
+                  </span>
+                  <BulkButton disabled={bulkBusy} tone="pink" onClick={() => runBulk('feature')}>Add to Japan New Arrivals</BulkButton>
+                  <BulkButton disabled={bulkBusy} onClick={() => runBulk('unfeature')}>Remove from Japan New Arrivals</BulkButton>
+                  <BulkButton disabled={bulkBusy} tone="green" onClick={() => runBulk('in_stock')}>In Stock</BulkButton>
+                  <BulkButton disabled={bulkBusy} onClick={() => runBulk('out_of_stock')}>Out of Stock</BulkButton>
+                  <BulkButton disabled={bulkBusy} tone="danger" onClick={() => setDeleteConfirm('bulk')}>Delete</BulkButton>
+                  <div className="flex-1" />
+                  <button
+                    type="button"
+                    onClick={() => setSelected(new Set())}
+                    style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 12 }}
+                    className="hover:text-[#F0F0F4] transition-colors px-2"
+                  >
+                    Clear
+                  </button>
                 </div>
+              )}
 
-                {filteredProducts.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>No products match your search.</p>
-                  </div>
-                ) : (
-                  filteredProducts.map((p, i) => {
-                    const sc = getStockStyle(p.inStock);
-                    const cc = categoryColor[p.category];
-                    return (
-                      <div
-                        key={p.id}
-                        style={{
-                          borderBottom: i < filteredProducts.length - 1 ? '1px solid #1A1A20' : 'none',
-                          padding: '12px 16px',
-                          display: 'grid',
-                          gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 80px 116px 80px',
-                          gap: 12,
-                          alignItems: 'center',
-                        }}
-                      >
-                        {/* Product */}
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={p.images[0]}
-                            alt={p.name}
-                            style={{ width: 40, height: 40, borderRadius: '0.375rem', objectFit: 'cover', backgroundColor: '#1A1A1F', flexShrink: 0 }}
-                          />
-                          <div className="min-w-0">
-                            <p style={{ color: '#F0F0F4', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="font-500 truncate">{p.name}</p>
-                            <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="truncate">{p.series}</p>
-                          </div>
-                        </div>
+              {/* Table (scrolls sideways on narrow screens) */}
+              <div style={{ backgroundColor: '#141418', border: '1px solid #222228', borderRadius: '0.875rem', overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <div style={{ minWidth: 1020 }}>
+                    {/* Table header */}
+                    <div
+                      style={{
+                        backgroundColor: '#111114',
+                        borderBottom: '1px solid #1A1A20',
+                        padding: '10px 16px',
+                        display: 'grid',
+                        gridTemplateColumns: COLS,
+                        gap: 12,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                        onChange={toggleSelectAll}
+                        aria-label="Select all listed products"
+                        style={{ width: 16, height: 16, accentColor: '#FF2D78', cursor: 'pointer' }}
+                      />
+                      {['Product', 'Category', 'Condition', 'Price', 'Availability', 'Japan New', ''].map((h, i) => (
+                        <p key={h + i} style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="uppercase tracking-wider font-500">
+                          {h}
+                        </p>
+                      ))}
+                    </div>
 
-                        {/* Category */}
-                        <div>
-                          <span
-                            style={{
-                              backgroundColor: cc.bg,
-                              color: cc.text,
-                              fontFamily: 'Outfit, sans-serif',
-                              fontSize: 10,
-                              padding: '2px 8px',
-                              borderRadius: 9999,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {categoryLabel[p.category]}
-                          </span>
-                        </div>
-
-                        {/* Condition */}
-                        <p style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 12 }}>{p.condition}</p>
-
-                        {/* Price */}
-                        <div>
-                          <p style={{ color: p.salePrice ? '#FF2D78' : '#F0F0F4', fontFamily: 'Outfit, sans-serif', fontSize: 13 }} className="font-700">
-                            {formatPrice(p.salePrice ?? p.price)}
-                          </p>
-                          {p.salePrice && (
-                            <p style={{ color: '#40404C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="line-through">
-                              {formatPrice(p.price)}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Availability: one-click toggle */}
-                        <div>
-                          <button
-                            onClick={() => onToggleStock(p.id, !p.inStock)}
-                            title={p.inStock ? 'Click to mark Out of Stock' : 'Click to mark In Stock'}
-                            aria-pressed={p.inStock}
-                            style={{
-                              color: sc.text,
-                              backgroundColor: sc.bg,
-                              border: `1px solid ${p.inStock ? 'rgba(34,197,94,0.3)' : '#2A2A32'}`,
-                              fontFamily: 'Outfit, sans-serif',
-                              fontSize: 11,
-                              padding: '5px 10px',
-                              borderRadius: 9999,
-                              whiteSpace: 'nowrap',
-                            }}
-                            className="font-700 flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition-all"
-                          >
-                            <span style={{ backgroundColor: sc.text }} className="w-1.5 h-1.5 rounded-full inline-block" />
-                            {sc.label}
-                          </button>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1 justify-end">
-                          <button
-                            onClick={() => openEdit(p)}
-                            style={{ color: '#80808C', backgroundColor: '#1A1A20', border: '1px solid #222228', borderRadius: '0.375rem', width: 30, height: 30 }}
-                            className="flex items-center justify-center hover:text-[#F0F0F4] hover:border-[#333340] transition-all"
-                            title="Edit"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(p.id)}
-                            style={{ color: '#606068', backgroundColor: '#1A1A20', border: '1px solid #222228', borderRadius: '0.375rem', width: 30, height: 30 }}
-                            className="flex items-center justify-center hover:text-[#FF2D78] hover:border-[rgba(255,45,120,0.3)] transition-all"
-                            title="Delete"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M2 3H10M4 3V2H8V3M9 3L8.5 10H3.5L3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
-                        </div>
+                    {filteredProducts.length === 0 ? (
+                      <div className="py-16 text-center">
+                        <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>No products match your search.</p>
                       </div>
-                    );
-                  })
-                )}
+                    ) : (
+                      filteredProducts.map((p, i) => {
+                        const sc = getStockStyle(p.inStock);
+                        const cc = categoryColor[p.category];
+                        const isSel = selected.has(p.id);
+                        return (
+                          <div
+                            key={p.id}
+                            style={{
+                              borderBottom: i < filteredProducts.length - 1 ? '1px solid #1A1A20' : 'none',
+                              padding: '12px 16px',
+                              display: 'grid',
+                              gridTemplateColumns: COLS,
+                              gap: 12,
+                              alignItems: 'center',
+                              backgroundColor: isSel ? 'rgba(255,45,120,0.06)' : 'transparent',
+                            }}
+                          >
+                            {/* Select (shift-click to select a range) */}
+                            <input
+                              type="checkbox"
+                              checked={isSel}
+                              onChange={() => {}}
+                              onClick={(e) => toggleSelect(p.id, i, e.shiftKey)}
+                              aria-label={`Select ${p.name}`}
+                              style={{ width: 16, height: 16, accentColor: '#FF2D78', cursor: 'pointer' }}
+                            />
+
+                            {/* Product */}
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img
+                                src={p.images[0]}
+                                alt={p.name}
+                                style={{ width: 40, height: 40, borderRadius: '0.375rem', objectFit: 'cover', backgroundColor: '#1A1A1F', flexShrink: 0 }}
+                              />
+                              <div className="min-w-0">
+                                <p style={{ color: '#F0F0F4', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="font-500 truncate">{p.name}</p>
+                                <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="truncate">{p.series}</p>
+                              </div>
+                            </div>
+
+                            {/* Category (main category + listing type) */}
+                            <div className="min-w-0">
+                              <p style={{ color: '#C8C8D2', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="truncate">{collectionLabel(p.collection)}</p>
+                              <span
+                                style={{
+                                  backgroundColor: cc.bg,
+                                  color: cc.text,
+                                  fontFamily: 'Outfit, sans-serif',
+                                  fontSize: 10,
+                                  padding: '1px 7px',
+                                  borderRadius: 9999,
+                                  fontWeight: 700,
+                                  display: 'inline-block',
+                                  marginTop: 3,
+                                }}
+                              >
+                                {categoryLabel[p.category]}
+                              </span>
+                            </div>
+
+                            {/* Condition */}
+                            <p style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="font-600">{p.condition}</p>
+
+                            {/* Price */}
+                            <div>
+                              <p style={{ color: p.salePrice ? '#FF2D78' : '#F0F0F4', fontFamily: 'Outfit, sans-serif', fontSize: 13 }} className="font-700">
+                                {formatPrice(p.salePrice ?? p.price)}
+                              </p>
+                              {p.salePrice && (
+                                <p style={{ color: '#40404C', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="line-through">
+                                  {formatPrice(p.price)}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Availability: one-click toggle */}
+                            <div>
+                              <button
+                                onClick={() => onToggleStock(p.id, !p.inStock)}
+                                title={p.inStock ? 'Click to mark Out of Stock' : 'Click to mark In Stock'}
+                                aria-pressed={p.inStock}
+                                style={{
+                                  color: sc.text,
+                                  backgroundColor: sc.bg,
+                                  border: `1px solid ${p.inStock ? 'rgba(34,197,94,0.3)' : '#2A2A32'}`,
+                                  fontFamily: 'Outfit, sans-serif',
+                                  fontSize: 11,
+                                  padding: '5px 10px',
+                                  borderRadius: 9999,
+                                  whiteSpace: 'nowrap',
+                                }}
+                                className="font-700 flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition-all"
+                              >
+                                <span style={{ backgroundColor: sc.text }} className="w-1.5 h-1.5 rounded-full inline-block" />
+                                {sc.label}
+                              </button>
+                            </div>
+
+                            {/* Japan New Arrivals: one-click toggle */}
+                            <div>
+                              <button
+                                onClick={() => onToggleFeatured(p.id, !p.isFeatured)}
+                                title={p.isFeatured ? 'Shown in Japan New Arrivals. Click to remove' : 'Click to add to Japan New Arrivals'}
+                                aria-pressed={p.isFeatured}
+                                style={{
+                                  color: p.isFeatured ? '#FF2D78' : '#50505C',
+                                  backgroundColor: p.isFeatured ? 'rgba(255,45,120,0.12)' : '#0D0D10',
+                                  border: `1px solid ${p.isFeatured ? 'rgba(255,45,120,0.35)' : '#222228'}`,
+                                  fontFamily: 'Outfit, sans-serif',
+                                  fontSize: 11,
+                                  padding: '5px 10px',
+                                  borderRadius: 9999,
+                                  whiteSpace: 'nowrap',
+                                }}
+                                className="font-700 flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition-all"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 20 20" fill={p.isFeatured ? 'currentColor' : 'none'}>
+                                  <path d="M10 2L12.5 7.5H18L13.5 11L15.5 17L10 13.5L4.5 17L6.5 11L2 7.5H7.5L10 2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                                </svg>
+                                {p.isFeatured ? 'Featured' : 'Add'}
+                              </button>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-1 justify-end">
+                              <button
+                                onClick={() => openEdit(p)}
+                                style={{ color: '#80808C', backgroundColor: '#1A1A20', border: '1px solid #222228', borderRadius: '0.375rem', width: 30, height: 30 }}
+                                className="flex items-center justify-center hover:text-[#F0F0F4] hover:border-[#333340] transition-all"
+                                title="Edit"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(p.id)}
+                                style={{ color: '#606068', backgroundColor: '#1A1A20', border: '1px solid #222228', borderRadius: '0.375rem', width: 30, height: 30 }}
+                                className="flex items-center justify-center hover:text-[#FF2D78] hover:border-[rgba(255,45,120,0.3)] transition-all"
+                                title="Delete"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M2 3H10M4 3V2H8V3M9 3L8.5 10H3.5L3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* ── CATEGORIES ── */}
+          {tab === 'categories' && (
+            <CategoriesTab categories={categories} onEdit={onEditCategory} />
           )}
 
           {/* ── BANNERS ── */}
@@ -614,25 +806,31 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
         </main>
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* Add / Edit Modal: everything on one page, nothing to click "Next" through */}
       {modal && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-6 px-3 sm:px-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
-          onClick={(e) => e.target === e.currentTarget && setModal(null)}
+          onClick={(e) => e.target === e.currentTarget && !saving && setModal(null)}
         >
           <div
-            style={{ backgroundColor: '#111114', border: '1px solid #222228', borderRadius: '1rem', width: '100%', maxWidth: 600 }}
+            style={{ backgroundColor: '#111114', border: '1px solid #222228', borderRadius: '1rem', width: '100%', maxWidth: 680 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ borderBottom: '1px solid #1A1A20', padding: '16px 20px' }} className="flex items-center justify-between">
-              <h2 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 17 }} className="font-700">
-                {modal.mode === 'add' ? 'Add Product' : 'Edit Product'}
-              </h2>
+            <div style={{ borderBottom: '1px solid #1A1A20', padding: '16px 20px' }} className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 17 }} className="font-700">
+                  {modal.mode === 'add' ? 'Add Product' : 'Edit Product'}
+                </h2>
+                {modal.mode === 'edit' && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', color: '#50505C', fontSize: 12 }} className="truncate">{modal.product?.name}</p>
+                )}
+              </div>
               <button
-                onClick={() => setModal(null)}
+                onClick={() => !saving && setModal(null)}
                 style={{ color: '#50505C', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.375rem' }}
-                className="hover:text-[#F0F0F4] hover:bg-[#1A1A20] transition-all"
+                className="hover:text-[#F0F0F4] hover:bg-[#1A1A20] transition-all flex-shrink-0"
+                aria-label="Close"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M11 3L3 11M3 3L11 11" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
@@ -640,244 +838,203 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
               </button>
             </div>
 
-            {/* Step indicator */}
-            <div style={{ padding: '14px 20px 0' }} className="flex items-center gap-2">
-              {STEPS.map((label, i) => (
-                <div key={label} className="flex items-center gap-2 flex-1">
-                  <button
-                    type="button"
-                    onClick={() => i < step && setStep(i)}
-                    disabled={i > step}
-                    style={{
-                      width: '100%',
-                      height: 4,
-                      borderRadius: 9999,
-                      backgroundColor: i <= step ? '#FF2D78' : '#1E1E26',
-                      border: 'none',
-                      cursor: i < step ? 'pointer' : 'default',
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div style={{ padding: '6px 20px 0' }} className="flex items-center justify-between">
-              <span style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 12 }} className="font-600">
-                {step + 1}. {STEPS[step]}
-              </span>
-              <span style={{ fontFamily: 'Inter, sans-serif', color: '#50505C', fontSize: 11 }}>
-                Step {step + 1} of {STEPS.length}
-              </span>
-            </div>
-
-            <div className="p-5 flex flex-col gap-4" style={{ minHeight: 280 }}>
-              {step === 0 && (
-                <>
-                  <Field label="Product Name *">
-                    <input style={inputStyle} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Hatsune Miku DX Edition" />
+            <div className="p-5 flex flex-col gap-6">
+              {/* Basics */}
+              <FormSection title="Basics">
+                <Field label="Product Name *">
+                  <input style={inputStyle} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Hatsune Miku DX Edition" />
+                </Field>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Series *">
+                    <input style={inputStyle} value={form.series} onChange={(e) => set('series', e.target.value)} placeholder="e.g. Vocaloid" />
                   </Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Series *">
-                      <input style={inputStyle} value={form.series} onChange={(e) => set('series', e.target.value)} placeholder="e.g. Vocaloid" />
-                    </Field>
-                    <Field label="Character *">
-                      <input style={inputStyle} value={form.character} onChange={(e) => set('character', e.target.value)} placeholder="e.g. Hatsune Miku" />
-                    </Field>
-                  </div>
+                  <Field label="Character">
+                    <input style={inputStyle} value={form.character} onChange={(e) => set('character', e.target.value)} placeholder="e.g. Hatsune Miku" />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Manufacturer">
                     <input style={inputStyle} value={form.manufacturer} onChange={(e) => set('manufacturer', e.target.value)} placeholder="Good Smile Co." />
                   </Field>
-                </>
-              )}
+                  <Field label="Scale">
+                    <input style={inputStyle} value={form.scale ?? ''} onChange={(e) => set('scale', e.target.value)} placeholder="1/7" />
+                  </Field>
+                </div>
+              </FormSection>
 
-              {step === 1 && (
-                <ImageDropzone
-                  label="Photos"
-                  images={form.images.filter(Boolean)}
-                  onChange={(imgs) => set('images', imgs)}
-                  multiple
-                  folder="products"
-                />
-              )}
-
-              {step === 2 && (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Category *">
-                      <select
-                        style={{ ...inputStyle, cursor: 'pointer' }}
-                        value={form.category}
-                        onChange={(e) => set('category', e.target.value as Category)}
-                      >
-                        {CATEGORIES.map((c) => (
-                          <option key={c} value={c}>{categoryLabel[c]}</option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Condition *">
-                      <select
-                        style={{ ...inputStyle, cursor: 'pointer' }}
-                        value={form.condition}
-                        onChange={(e) => set('condition', e.target.value as Condition)}
-                      >
-                        {CONDITIONS.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Price (₱) *">
-                      <input
-                        style={inputStyle}
-                        type="number"
-                        min={0}
-                        value={form.price || ''}
-                        onChange={(e) => set('price', Number(e.target.value))}
-                        placeholder="3500"
-                      />
-                    </Field>
-                    <Field label="Sale Price (₱) — optional">
-                      <input
-                        style={inputStyle}
-                        type="number"
-                        min={0}
-                        value={form.salePrice ?? ''}
-                        onChange={(e) => set('salePrice', e.target.value ? Number(e.target.value) : undefined)}
-                        placeholder="Leave blank if no sale"
-                      />
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Availability *">
-                      <div className="flex gap-2">
-                        {([true, false] as const).map((val) => {
-                          const st = getStockStyle(val);
-                          const active = form.inStock === val;
-                          return (
-                            <button
-                              key={String(val)}
-                              type="button"
-                              onClick={() => set('inStock', val)}
-                              style={{
-                                flex: 1,
-                                color: active ? st.text : '#50505C',
-                                backgroundColor: active ? st.bg : '#0D0D10',
-                                border: `1px solid ${active ? (val ? 'rgba(34,197,94,0.4)' : '#3A3A44') : '#222228'}`,
-                                fontFamily: 'Outfit, sans-serif',
-                                fontSize: 12,
-                                borderRadius: '0.5rem',
-                                padding: '8px 10px',
-                              }}
-                              className="font-700 transition-all"
-                            >
-                              {st.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </Field>
-                    <Field label="Scale">
-                      <input style={inputStyle} value={form.scale ?? ''} onChange={(e) => set('scale', e.target.value)} placeholder="1/7" />
-                    </Field>
-                  </div>
-
+              {/* Where it lives + status */}
+              <FormSection title="Category & Condition">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Category *">
+                    <select
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                      value={form.collection}
+                      onChange={(e) => set('collection', e.target.value as Collection)}
+                    >
+                      {COLLECTIONS.map((c) => (
+                        <option key={c.slug} value={c.slug}>{c.label}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Condition *">
+                    <select
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                      value={form.condition}
+                      onChange={(e) => set('condition', e.target.value as Condition)}
+                    >
+                      {CONDITIONS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Listing Type *">
+                    <select
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                      value={form.category}
+                      onChange={(e) => set('category', e.target.value as Category)}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{categoryLabel[c]}</option>
+                      ))}
+                    </select>
+                  </Field>
                   {form.category === 'pre-order' && (
                     <Field label="Estimated Arrival">
                       <input style={inputStyle} value={form.estimatedArrival ?? ''} onChange={(e) => set('estimatedArrival', e.target.value)} placeholder="e.g. March 2027" />
                     </Field>
                   )}
-                </>
-              )}
+                </div>
+              </FormSection>
 
-              {step === 3 && (
-                <>
-                  <Field label="Description">
-                    <textarea
-                      style={{ ...inputStyle, minHeight: 120, resize: 'vertical' }}
-                      value={form.description}
-                      onChange={(e) => set('description', e.target.value)}
-                      placeholder="Product details, features, included accessories…"
+              {/* Pricing */}
+              <FormSection title="Pricing & Stock">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Price (₱) *">
+                    <input
+                      style={inputStyle}
+                      type="number"
+                      min={0}
+                      value={form.price || ''}
+                      onChange={(e) => set('price', Number(e.target.value))}
+                      placeholder="3500"
                     />
                   </Field>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => set('isFeatured', !form.isFeatured)}
+                  <Field label="Sale Price (₱) — optional">
+                    <input
+                      style={inputStyle}
+                      type="number"
+                      min={0}
+                      value={form.salePrice ?? ''}
+                      onChange={(e) => set('salePrice', e.target.value ? Number(e.target.value) : undefined)}
+                      placeholder="Leave blank if no sale"
+                    />
+                  </Field>
+                </div>
+                <Field label="Availability *">
+                  <div className="flex gap-2">
+                    {([true, false] as const).map((val) => {
+                      const st = getStockStyle(val);
+                      const active = form.inStock === val;
+                      return (
+                        <button
+                          key={String(val)}
+                          type="button"
+                          onClick={() => set('inStock', val)}
+                          style={{
+                            flex: 1,
+                            color: active ? st.text : '#50505C',
+                            backgroundColor: active ? st.bg : '#0D0D10',
+                            border: `1px solid ${active ? (val ? 'rgba(34,197,94,0.4)' : '#3A3A44') : '#222228'}`,
+                            fontFamily: 'Outfit, sans-serif',
+                            fontSize: 12,
+                            borderRadius: '0.5rem',
+                            padding: '8px 10px',
+                          }}
+                          className="font-700 transition-all"
+                        >
+                          {st.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => set('isFeatured', !form.isFeatured)}
+                    aria-pressed={form.isFeatured}
+                    style={{
+                      width: 40,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: form.isFeatured ? '#FF2D78' : '#222228',
+                      border: 'none',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
                       style={{
-                        width: 40,
-                        height: 22,
-                        borderRadius: 11,
-                        backgroundColor: form.isFeatured ? '#FF2D78' : '#222228',
-                        border: 'none',
-                        position: 'relative',
-                        transition: 'background 0.2s',
-                        cursor: 'pointer',
-                        flexShrink: 0,
+                        position: 'absolute',
+                        top: 3,
+                        left: form.isFeatured ? 21 : 3,
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: '#fff',
+                        transition: 'left 0.2s',
+                        display: 'block',
                       }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: 3,
-                          left: form.isFeatured ? 21 : 3,
-                          width: 16,
-                          height: 16,
-                          borderRadius: '50%',
-                          backgroundColor: '#fff',
-                          transition: 'left 0.2s',
-                          display: 'block',
-                        }}
-                      />
-                    </button>
-                    <span style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>Mark as Featured product</span>
-                  </div>
+                    />
+                  </button>
+                  <span style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>Show in Japan New Arrivals</span>
+                </div>
+              </FormSection>
 
-                  {/* Review summary */}
-                  <div style={{ backgroundColor: '#0D0D10', border: '1px solid #1A1A20', borderRadius: '0.625rem', padding: '12px 14px' }} className="flex flex-col gap-1.5">
-                    <p style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 12 }} className="font-600 mb-0.5">Ready to save</p>
-                    <p style={{ fontFamily: 'Inter, sans-serif', color: '#80808C', fontSize: 12 }}>
-                      {form.name || '(untitled)'} — {form.series || '(no series)'} · {formatPrice(form.price)}{form.salePrice ? ` (sale ${formatPrice(form.salePrice)})` : ''} · {form.inStock ? 'In stock' : 'Out of stock'} · {form.images.filter(Boolean).length} photo{form.images.filter(Boolean).length === 1 ? '' : 's'}
-                    </p>
-                  </div>
-                </>
-              )}
+              {/* Photos */}
+              <FormSection title="Photos">
+                <ImageDropzone
+                  label=""
+                  images={form.images.filter(Boolean)}
+                  onChange={(imgs) => set('images', imgs)}
+                  multiple
+                  folder="products"
+                />
+              </FormSection>
+
+              {/* Description */}
+              <FormSection title="Description">
+                <textarea
+                  style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }}
+                  value={form.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  placeholder="Product details, features, included accessories…"
+                />
+              </FormSection>
             </div>
 
-            {/* Footer */}
-            <div style={{ borderTop: '1px solid #1A1A20', padding: '14px 20px' }} className="flex items-center justify-between gap-3">
-              <button
-                onClick={() => (step === 0 ? setModal(null) : setStep(step - 1))}
-                style={{ color: '#80808C', backgroundColor: '#1A1A20', border: '1px solid #222228', fontFamily: 'Outfit, sans-serif', fontSize: 13, borderRadius: 9999, padding: '8px 20px' }}
-                className="font-500 hover:text-[#F0F0F4] transition-colors"
-              >
-                {step === 0 ? 'Cancel' : 'Back'}
-              </button>
-
-              {step < STEPS.length - 1 ? (
+            {/* Footer: always visible, one click saves everything */}
+            <div
+              style={{ borderTop: '1px solid #1A1A20', padding: '12px 20px', position: 'sticky', bottom: 0, backgroundColor: '#111114', borderRadius: '0 0 1rem 1rem' }}
+              className="flex items-center justify-between gap-3"
+            >
+              <p style={{ color: '#FF2D78', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="min-w-0">
+                {missing.length > 0 ? `Still needed: ${missing.join(', ')}` : ''}
+              </p>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
-                  onClick={() => canGoNext && setStep(step + 1)}
-                  disabled={!canGoNext}
-                  style={{
-                    background: '#FF2D78',
-                    color: '#fff',
-                    fontFamily: 'Outfit, sans-serif',
-                    fontSize: 13,
-                    borderRadius: 9999,
-                    padding: '8px 24px',
-                    opacity: canGoNext ? 1 : 0.4,
-                    border: 'none',
-                    cursor: canGoNext ? 'pointer' : 'not-allowed',
-                  }}
-                  className="font-700 hover:opacity-90 transition-opacity"
+                  onClick={() => setModal(null)}
+                  disabled={saving}
+                  style={{ color: '#80808C', backgroundColor: '#1A1A20', border: '1px solid #222228', fontFamily: 'Outfit, sans-serif', fontSize: 13, borderRadius: 9999, padding: '8px 20px' }}
+                  className="font-500 hover:text-[#F0F0F4] transition-colors"
                 >
-                  Next
+                  Cancel
                 </button>
-              ) : (
                 <button
                   onClick={saveForm}
-                  disabled={!step0Valid || !step2Valid}
+                  disabled={missing.length > 0 || saving}
                   style={{
                     background: '#FF2D78',
                     color: '#fff',
@@ -885,22 +1042,22 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
                     fontSize: 13,
                     borderRadius: 9999,
                     padding: '8px 24px',
-                    opacity: (!step0Valid || !step2Valid) ? 0.4 : 1,
+                    opacity: missing.length > 0 || saving ? 0.4 : 1,
                     border: 'none',
-                    cursor: (!step0Valid || !step2Valid) ? 'not-allowed' : 'pointer',
+                    cursor: missing.length > 0 || saving ? 'not-allowed' : 'pointer',
                     boxShadow: '0 4px 12px rgba(255,45,120,0.3)',
                   }}
                   className="font-700 hover:opacity-90 transition-opacity"
                 >
-                  {modal.mode === 'add' ? 'Add Product' : 'Save Changes'}
+                  {saving ? 'Saving…' : modal.mode === 'add' ? 'Add Product' : 'Save Changes'}
                 </button>
-              )}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete confirm */}
+      {/* Delete confirm (single product or the whole selection) */}
       {deleteConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -917,9 +1074,13 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
                 <path d="M16 10V17M16 21V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
-            <p style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 16, marginBottom: 8 }} className="font-700">Delete product?</p>
+            <p style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 16, marginBottom: 8 }} className="font-700">
+              {deleteConfirm === 'bulk' ? `Delete ${selectedIds.length} products?` : 'Delete product?'}
+            </p>
             <p style={{ fontFamily: 'Inter, sans-serif', color: '#50505C', fontSize: 13, marginBottom: 20 }}>
-              "{products.find((p) => p.id === deleteConfirm)?.name}" will be permanently removed.
+              {deleteConfirm === 'bulk'
+                ? 'The selected products will be permanently removed.'
+                : `"${products.find((p) => p.id === deleteConfirm)?.name}" will be permanently removed.`}
             </p>
             <div className="flex gap-3 justify-center">
               <button
@@ -929,7 +1090,12 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
                 Cancel
               </button>
               <button
-                onClick={() => { onDelete(deleteConfirm); setDeleteConfirm(null); }}
+                onClick={() => {
+                  const target = deleteConfirm;
+                  setDeleteConfirm(null);
+                  if (target === 'bulk') runBulk('delete');
+                  else onDelete(target);
+                }}
                 style={{ background: 'rgba(255,45,120,0.15)', color: '#FF2D78', border: '1px solid rgba(255,45,120,0.3)', fontFamily: 'Outfit, sans-serif', fontSize: 13, borderRadius: 9999, padding: '8px 20px' }}
                 className="font-700 hover:bg-[rgba(255,45,120,0.25)] transition-colors"
               >
@@ -946,10 +1112,57 @@ export default function AdminPage({ products, onAdd, onEdit, onDelete, onToggleS
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, display: 'block', marginBottom: 5 }} className="uppercase tracking-wider font-500">
-        {label}
-      </label>
+      {label && (
+        <label style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, display: 'block', marginBottom: 5 }} className="uppercase tracking-wider font-500">
+          {label}
+        </label>
+      )}
       {children}
     </div>
+  );
+}
+
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', fontSize: 13, borderBottom: '1px solid #1A1A20', paddingBottom: 6 }} className="font-700">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+type BulkTone = 'default' | 'pink' | 'green' | 'danger';
+
+function BulkButton({ children, onClick, disabled, tone = 'default' }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; tone?: BulkTone }) {
+  const tones: Record<BulkTone, { c: string; bg: string; b: string }> = {
+    default: { c: '#C8C8D2', bg: '#1A1A20', b: '#2A2A32' },
+    pink: { c: '#FF2D78', bg: 'rgba(255,45,120,0.12)', b: 'rgba(255,45,120,0.35)' },
+    green: { c: '#22C55E', bg: 'rgba(34,197,94,0.1)', b: 'rgba(34,197,94,0.3)' },
+    danger: { c: '#FF6B6B', bg: 'rgba(255,80,80,0.08)', b: 'rgba(255,80,80,0.3)' },
+  };
+  const t = tones[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        color: t.c,
+        backgroundColor: t.bg,
+        border: `1px solid ${t.b}`,
+        fontFamily: 'Outfit, sans-serif',
+        fontSize: 12,
+        borderRadius: 9999,
+        padding: '5px 12px',
+        opacity: disabled ? 0.5 : 1,
+        cursor: disabled ? 'wait' : 'pointer',
+        whiteSpace: 'nowrap',
+      }}
+      className="font-700 hover:opacity-80 active:scale-95 transition-all"
+    >
+      {children}
+    </button>
   );
 }

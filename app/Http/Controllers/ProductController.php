@@ -16,16 +16,22 @@ class ProductController extends Controller
             $query->where('category', $request->string('category'));
         }
 
+        if ($request->filled('collection')) {
+            $query->where('collection', $request->string('collection'));
+        }
+
         if ($request->boolean('featured')) {
             $query->where('is_featured', true);
         }
 
         if ($request->filled('q')) {
             $term = '%'.$request->string('q').'%';
-            $query->where(function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                    ->orWhere('series', 'like', $term)
-                    ->orWhere('character', 'like', $term);
+            // PostgreSQL's LIKE is case-sensitive (MySQL/SQLite's is not), so use ILIKE there.
+            $like = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->where(function ($q) use ($term, $like) {
+                $q->where('name', $like, $term)
+                    ->orWhere('series', $like, $term)
+                    ->orWhere('character', $like, $term);
             });
         }
 

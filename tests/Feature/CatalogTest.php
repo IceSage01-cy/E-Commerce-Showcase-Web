@@ -24,7 +24,8 @@ class CatalogTest extends TestCase
             'series' => 'Test Series',
             'price' => 1500,
             'category' => 'on-hand',
-            'condition' => 'New',
+            'collection' => 'anime-figures',
+            'condition' => 'MIB',
             'inStock' => true,
         ], $overrides);
     }
@@ -59,10 +60,10 @@ class CatalogTest extends TestCase
 
     public function test_database_rejects_duplicate_listings(): void
     {
-        Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'New']);
+        Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'MIB']);
 
         $this->expectException(\Illuminate\Database\QueryException::class);
-        Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'New']);
+        Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'MIB']);
     }
 
     // ── Public API ─────────────────────────────────────────────────────
@@ -122,7 +123,7 @@ class CatalogTest extends TestCase
             ->assertJsonValidationErrors('name');
 
         // Same name + series but a different condition is a legitimately different listing.
-        $this->admin()->postJson('/admin/api/products', $this->payload(['condition' => 'Pre-owned']))
+        $this->admin()->postJson('/admin/api/products', $this->payload(['condition' => 'LOOSE']))
             ->assertCreated();
     }
 
@@ -131,5 +132,133 @@ class CatalogTest extends TestCase
         $id = $this->admin()->postJson('/admin/api/products', $this->payload())->json('id');
 
         $this->admin()->putJson("/admin/api/products/{$id}", $this->payload(['price' => 999]))->assertOk();
+    }
+
+    // ── Conditions, categories, ordering, bulk edits ────────────────────────
+
+    public function test_condition_must_be_misb_mib_bib_or_loose(): void
+    {
+        foreach (['MISB', 'MIB', 'BIB', 'LOOSE'] as $i => $condition) {
+            $this->admin()->postJson('/admin/api/products', $this->payload(['name' => "Fig $i", 'condition' => $condition]))
+                ->assertCreated()->assertJsonPath('condition', $condition);
+        }
+
+        foreach (['New', 'Sealed', 'Pre-owned', 'misb'] as $bad) {
+            $this->admin()->postJson('/admin/api/products', $this->payload(['name' => "Bad $bad", 'condition' => $bad]))
+                ->assertStatus(422)->assertJsonValidationErrors('condition');
+        }
+    }
+
+    public function test_product_collection_is_validated_and_exposed_publicly(): void
+    {
+        $this->admin()->postJson('/admin/api/products', $this->payload(['collection' => 'nonsense']))
+            ->assertStatus(422)->assertJsonValidationErrors('collection');
+
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Scale one', 'collection' => 'scale-figures']))->assertCreated();
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix one', 'collection' => 'chix-figures']))->assertCreated();
+
+        $this->getJson('/api/products?collection=scale-figures')->assertOk()
+            ->assertJsonCount(1)->assertJsonPath('0.name', 'Scale one')->assertJsonPath('0.collection', 'scale-figures');
+    }
+
+    public function test_main_categories_exist_and_admin_can_change_their_picture(): void
+    {
+        $this->seed(\Database\Seeders\CategorySeeder::class);
+        $unauthorised = \App\Models\Category::firstOrFail();
+        // Checked before admin() is used: withSession() sticks to the test for every later request.
+        $this->putJson("/admin/api/categories/{$unauthorised->id}", ['label' => 'x'])->assertUnauthorized();
+
+        $slugs = collect($this->getJson('/api/categories')->assertOk()->json())->pluck('slug')->all();
+        $this->assertSame(['anime-figures', 'scale-figures', 'rare-exclusive', 'chix-figures'], $slugs);
+
+        $category = \App\Models\Category::where('slug', 'chix-figures')->firstOrFail();
+        $this->admin()->putJson("/admin/api/categories/{$category->id}", [
+            'label' => 'CHIX Figures',
+            'image' => 'https://cdn.example.com/categories/chix.jpg',
+        ])->assertOk()->assertJsonPath('image', 'https://cdn.example.com/categories/chix.jpg');
+
+        $this->getJson('/api/categories')->assertJsonPath('3.image', 'https://cdn.example.com/categories/chix.jpg');
+
+        // Seeding again must not wipe the picture the admin set.
+        $this->seed(\Database\Seeders\CategorySeeder::class);
+        $this->assertSame('https://cdn.example.com/categories/chix.jpg', $category->fresh()->image_url);
+    }
+
+    public function test_admin_list_puts_the_most_recently_changed_product_first(): void
+    {
+        $a = Product::factory()->create(['name' => 'A', 'updated_at' => now()->subDays(3)]);
+        $b = Product::factory()->create(['name' => 'B', 'updated_at' => now()->subDays(2)]);
+        $c = Product::factory()->create(['name' => 'C', 'updated_at' => now()->subDays(1)]);
+
+        $order = fn () => collect($this->admin()->getJson('/admin/api/products')->assertOk()->json())->pluck('name')->all();
+        $this->assertSame(['C', 'B', 'A'], $order());
+
+        $this->admin()->putJson("/admin/api/products/{$a->id}", $this->payload(['name' => 'A', 'series' => $a->series, 'condition' => $a->condition, 'price' => 777]))->assertOk();
+        $this->assertSame(['A', 'C', 'B'], $order());
+
+        $this->admin()->patchJson("/admin/api/products/{$b->id}/stock", ['inStock' => ! $b->in_stock])->assertOk();
+        $this->assertSame(['B', 'A', 'C'], $order());
+    }
+
+    public function test_admin_can_toggle_featured_with_one_request(): void
+    {
+        $product = Product::factory()->create(['is_featured' => false]);
+
+        $this->patchJson("/admin/api/products/{$product->id}/featured", ['isFeatured' => true])->assertUnauthorized();
+
+        $this->admin()->patchJson("/admin/api/products/{$product->id}/featured", ['isFeatured' => true])
+            ->assertOk()->assertJsonPath('isFeatured', true);
+        $this->assertTrue($product->fresh()->is_featured);
+    }
+
+    public function test_bulk_actions_feature_unfeature_stock_and_delete(): void
+    {
+        $products = Product::factory()->count(3)->create(['is_featured' => false, 'in_stock' => true]);
+        $ids = $products->pluck('id')->all();
+        $untouched = Product::factory()->create(['is_featured' => false, 'in_stock' => true]);
+
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => $ids, 'action' => 'feature'])
+            ->assertOk()->assertJsonCount(3, 'products');
+        $this->assertSame(3, Product::where('is_featured', true)->count());
+        $this->assertFalse($untouched->fresh()->is_featured);
+
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => $ids, 'action' => 'unfeature'])->assertOk();
+        $this->assertSame(0, Product::where('is_featured', true)->count());
+
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => $ids, 'action' => 'out_of_stock'])->assertOk();
+        $this->assertSame(1, Product::where('in_stock', true)->count());
+
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => $ids, 'action' => 'in_stock'])->assertOk();
+        $this->assertSame(4, Product::where('in_stock', true)->count());
+
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => $ids, 'action' => 'delete'])
+            ->assertOk()->assertJsonCount(3, 'deleted');
+        $this->assertSame(1, Product::count());
+    }
+
+    public function test_bulk_requires_admin_and_valid_input(): void
+    {
+        $product = Product::factory()->create();
+
+        $this->postJson('/admin/api/products/bulk', ['ids' => [$product->id], 'action' => 'feature'])->assertUnauthorized();
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => [], 'action' => 'feature'])->assertStatus(422);
+        $this->admin()->postJson('/admin/api/products/bulk', ['ids' => [$product->id], 'action' => 'explode'])->assertStatus(422);
+    }
+
+    public function test_existing_conditions_are_migrated_to_the_new_names(): void
+    {
+        \Illuminate\Support\Facades\DB::table('products')->insert([
+            ['name' => 'Old sealed', 'series' => 'S', 'condition' => 'Sealed', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Old new', 'series' => 'S', 'condition' => 'New', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Old preowned', 'series' => 'S', 'condition' => 'Pre-owned', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Old loose', 'series' => 'S', 'condition' => 'Loose', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        (include database_path('migrations/2026_10_18_000001_rename_product_conditions.php'))->up();
+
+        $this->assertEqualsCanonicalizing(
+            ['Old sealed' => 'MISB', 'Old new' => 'MIB', 'Old preowned' => 'LOOSE', 'Old loose' => 'LOOSE'],
+            Product::pluck('condition', 'name')->all(),
+        );
     }
 }

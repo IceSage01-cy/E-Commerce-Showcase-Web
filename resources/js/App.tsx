@@ -7,19 +7,22 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
 import CartPage from './pages/CartPage';
-import type { Product } from './data/products';
+import type { Product, CategoryInfo } from './data/products';
+import { COLLECTION_SLUGS } from './data/products';
 
 type Route =
   | { type: 'home' }
   | { type: 'product'; id: string }
   | { type: 'search'; query: string; category?: string }
   | { type: 'category'; category: string }
+  | { type: 'collection'; collection: string }
   | { type: 'new-arrivals' }
   | { type: 'cart' };
 
 export default function App() {
   const [route, setRoute] = useState<Route>({ type: 'home' });
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [cart, setCart] = useState<string[]>([]);
   const [cartToast, setCartToast] = useState<string | null>(null);
@@ -32,6 +35,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Main categories + their admin-managed background pictures. The page works without them (fallback tiles).
+    axios.get('/api/categories').then((res) => setCategories(res.data)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [route]);
 
@@ -39,6 +47,7 @@ export default function App() {
     if (page === 'home') setRoute({ type: 'home' });
     else if (page === 'cart') setRoute({ type: 'cart' });
     else if (page === 'new-arrivals') setRoute({ type: 'new-arrivals' });
+    else if (COLLECTION_SLUGS.includes(page)) setRoute({ type: 'collection', collection: page });
     else if (['on-hand', 'pre-order', 'new-release'].includes(page)) {
       setRoute({ type: 'category', category: page });
     } else {
@@ -92,7 +101,7 @@ export default function App() {
             Setting the table…
           </div>
         ) : route.type === 'home' && (
-          <HomePage products={products} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
+          <HomePage products={products} categories={categories} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
         )}
         {route.type === 'product' && (
           <ProductDetailPage
@@ -115,8 +124,21 @@ export default function App() {
         )}
         {route.type === 'category' && (
           <SearchPage
+            key={`category-${route.category}`}
             initialQuery=""
             initialCategory={route.category}
+            onView={viewProduct}
+            onAddToCart={addToCart}
+            onSearch={handleSearch}
+            products={products}
+          />
+        )}
+        {route.type === 'collection' && (
+          <SearchPage
+            key={`collection-${route.collection}`}
+            initialQuery=""
+            initialCollection={route.collection}
+            categories={categories}
             onView={viewProduct}
             onAddToCart={addToCart}
             onSearch={handleSearch}

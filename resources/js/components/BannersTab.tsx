@@ -24,6 +24,10 @@ interface BannersTabProps {
 
 const CTA_ACTIONS = [
   { value: 'new-arrivals', label: 'New Arrivals' },
+  { value: 'anime-figures', label: 'Anime Figures' },
+  { value: 'scale-figures', label: 'Scale Figures' },
+  { value: 'rare-exclusive', label: 'Rare / Exclusive Items' },
+  { value: 'chix-figures', label: 'CHIX Figures' },
   { value: 'on-hand', label: 'On Hand' },
   { value: 'pre-order', label: 'Pre-Order' },
   { value: 'home', label: 'Home' },

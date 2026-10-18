@@ -20,13 +20,13 @@ export default function FeaturedProducts({ products = [], onView, onAddToCart }:
               style={{ color: '#FF2D78', fontFamily: 'Outfit, sans-serif', fontSize: 11 }}
               className="font-700 uppercase tracking-widest mb-1"
             >
-              Curated Picks
+              Fresh From Japan
             </p>
             <h2
               style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }}
               className="text-2xl sm:text-3xl font-800"
             >
-              Featured Collection
+              Japan New Arrivals
             </h2>
           </div>
           <button
