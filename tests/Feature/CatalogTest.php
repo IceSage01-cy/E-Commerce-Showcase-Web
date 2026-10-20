@@ -175,6 +175,7 @@ class CatalogTest extends TestCase
         $this->admin()->putJson("/admin/api/categories/{$category->id}", [
             'label' => 'CHIX Figures',
             'image' => 'https://cdn.example.com/categories/chix.jpg',
+<<<<<<< HEAD
             'accent' => '#22c55e',
             'font' => 'Bebas Neue',
             'style' => 'glow',
@@ -183,6 +184,9 @@ class CatalogTest extends TestCase
 
         $this->admin()->putJson("/admin/api/categories/{$category->id}", ['label' => 'x', 'accent' => 'red', 'font' => 'Comic Sans', 'style' => 'wild'])
             ->assertStatus(422)->assertJsonValidationErrors(['accent', 'font', 'style']);
+=======
+        ])->assertOk()->assertJsonPath('image', 'https://cdn.example.com/categories/chix.jpg');
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 
         $this->getJson('/api/categories')->assertJsonPath('3.image', 'https://cdn.example.com/categories/chix.jpg');
 
@@ -268,6 +272,7 @@ class CatalogTest extends TestCase
             Product::pluck('condition', 'name')->all(),
         );
     }
+<<<<<<< HEAD
 
     // ── Public list: lean payload, caching ──────────────────────────────────
 
@@ -315,4 +320,6 @@ class CatalogTest extends TestCase
         $this->admin()->postJson('/admin/api/products/bulk', ['ids' => [$a->id], 'action' => 'delete'])->assertOk();
         $this->getJson('/api/products')->assertJsonCount(1);
     }
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 }

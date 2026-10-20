@@ -175,12 +175,15 @@ export default function AdminPage({
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+<<<<<<< HEAD
   // Chip labels follow the names set in Admin -> Categories.
   const collectionOptions = COLLECTIONS.map((c) => ({
     slug: c.slug,
     label: categories.find((x) => x.slug === c.slug)?.label ?? c.label,
   }));
 
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
   const inputStyle = {
     backgroundColor: '#0D0D10',
     border: '1px solid #222228',
@@ -869,8 +872,24 @@ export default function AdminPage({
               </FormSection>
 
               {/* Where it lives + status */}
+<<<<<<< HEAD
               <FormSection title="Condition">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+=======
+              <FormSection title="Category & Condition">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Category *">
+                    <select
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                      value={form.collection}
+                      onChange={(e) => set('collection', e.target.value as Collection)}
+                    >
+                      {COLLECTIONS.map((c) => (
+                        <option key={c.slug} value={c.slug}>{c.label}</option>
+                      ))}
+                    </select>
+                  </Field>
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
                   <Field label="Condition *">
                     <select
                       style={{ ...inputStyle, cursor: 'pointer' }}
@@ -882,6 +901,20 @@ export default function AdminPage({
                       ))}
                     </select>
                   </Field>
+<<<<<<< HEAD
+=======
+                  <Field label="Listing Type *">
+                    <select
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                      value={form.category}
+                      onChange={(e) => set('category', e.target.value as Category)}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{categoryLabel[c]}</option>
+                      ))}
+                    </select>
+                  </Field>
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
                   {form.category === 'pre-order' && (
                     <Field label="Estimated Arrival">
                       <input style={inputStyle} value={form.estimatedArrival ?? ''} onChange={(e) => set('estimatedArrival', e.target.value)} placeholder="e.g. March 2027" />
@@ -986,6 +1019,7 @@ export default function AdminPage({
                   multiple
                   folder="products"
                 />
+<<<<<<< HEAD
 
                 {/* One-tap labels: choosing one files the item under that category automatically. */}
                 <div>
@@ -1012,6 +1046,8 @@ export default function AdminPage({
                     ))}
                   </div>
                 </div>
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
               </FormSection>
 
               {/* Description */}
@@ -1143,6 +1179,7 @@ function FormSection({ title, children }: { title: string; children: React.React
   );
 }
 
+<<<<<<< HEAD
 function LabelChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -1166,6 +1203,8 @@ function LabelChip({ active, onClick, children }: { active: boolean; onClick: ()
   );
 }
 
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 type BulkTone = 'default' | 'pink' | 'green' | 'danger';
 
 function BulkButton({ children, onClick, disabled, tone = 'default' }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; tone?: BulkTone }) {

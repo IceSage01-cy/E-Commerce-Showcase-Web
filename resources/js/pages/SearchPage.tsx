@@ -26,7 +26,10 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
     (initialCategory as Category) || 'all'
   );
 
+<<<<<<< HEAD
   // (declared below, after `results`)
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
   const [collectionFilter, setCollectionFilter] = useState<string>(initialCollection || 'all');
 
   const results = useMemo(() => {
@@ -64,7 +67,10 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
 
     return list;
   }, [query, sortBy, categoryFilter, collectionFilter, products]);
+<<<<<<< HEAD
   const paged = usePaged(results);
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();

@@ -130,7 +130,10 @@ class ProductController extends Controller
         if ($data['action'] === 'delete') {
             $deleted = Product::whereIn('id', $ids)->pluck('id')->map(fn ($id) => (string) $id)->all();
             Product::whereIn('id', $ids)->delete();
+<<<<<<< HEAD
             CatalogCache::bump();
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 
             return response()->json(['deleted' => $deleted]);
         }
@@ -144,7 +147,10 @@ class ProductController extends Controller
 
         // Query-builder updates don't touch updated_at on their own; set it so these float to the top of the list.
         Product::whereIn('id', $ids)->update($changes + ['updated_at' => now()]);
+<<<<<<< HEAD
         CatalogCache::bump();
+=======
+>>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 
         return response()->json([
             'products' => Product::whereIn('id', $ids)->orderByDesc('id')->get()->map->toFrontend(),
