@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Seeders used to insert blindly, so every run (or every deploy with RUN_SEEDERS=true)
+ * Seeders used to insert blindly, so every run (or every deploy)
  * piled up another copy of each product and banner. This removes the copies that already
  * exist (keeping the oldest row of each) and adds unique keys so the database itself can
  * never hold duplicates again, whatever code path inserts the rows.

@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 
+const NAV_ITEMS = [
+  { label: 'Anime Figures', action: 'anime-figures' },
+  { label: 'Scale Figures', action: 'scale-figures' },
+  { label: 'Rare / Exclusive', action: 'rare-exclusive' },
+  { label: 'CHIX Figures', action: 'chix-figures' },
+  { label: 'Pre-Orders', action: 'pre-order' },
+  { label: 'New Arrivals', action: 'new-arrivals' },
+];
+
 interface HeaderProps {
   onSearch: (query: string) => void;
   onNavigate: (page: string) => void;
@@ -30,40 +39,36 @@ export default function Header({ onSearch, onNavigate, cartCount }: HeaderProps)
       className="sticky top-0 z-50 backdrop-blur-md"
     >
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        {/* Logo */}
+        {/* Logo: same picture as the favicon. The name stays visible on phones too
+            (it only tucks away while the search box is open so the bar doesn't overflow). */}
         <button
           onClick={() => onNavigate('home')}
-          className="flex items-center gap-2 flex-shrink-0 group"
+          className="flex items-center gap-2 flex-shrink-0 min-w-0"
+          aria-label="Panda's Attic home"
         >
-          <div
-            style={{ background: 'linear-gradient(135deg, #FF2D78, #A855F7)' }}
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L14 5V11L8 15L2 11V5L8 1Z" fill="white" fillOpacity="0.9" />
-              <path d="M8 5L11 7V11L8 13L5 11V7L8 5Z" fill="white" fillOpacity="0.4" />
-            </svg>
-          </div>
+          <img
+            src="/logo.png"
+            alt=""
+            width={36}
+            height={36}
+            className="w-9 h-9 rounded-full flex-shrink-0"
+          />
           <span
             style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }}
-            className="text-xl font-700 tracking-tight hidden sm:block"
+            className={`text-lg sm:text-xl font-700 tracking-tight whitespace-nowrap ${searchOpen ? 'hidden sm:block' : 'block'}`}
           >
             Panda's Attic
           </span>
         </button>
 
         {/* Nav links (desktop) */}
-        <nav className="hidden md:flex items-center gap-1">
-          {[
-            { label: 'On Hand', action: 'on-hand' },
-            { label: 'Pre-Orders', action: 'pre-order' },
-            { label: 'New Arrivals', action: 'new-arrivals' },
-          ].map((item) => (
+        <nav className="hidden lg:flex items-center gap-0.5">
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.action}
               onClick={() => onNavigate(item.action)}
               style={{ color: '#80808C', fontFamily: 'Inter, sans-serif' }}
-              className="px-3 py-2 text-sm font-medium rounded-lg transition-all hover:text-[#F0F0F4] hover:bg-[#141418]"
+              className="px-2.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap hover:text-[#F0F0F4] hover:bg-[#141418]"
             >
               {item.label}
             </button>
@@ -137,7 +142,7 @@ export default function Header({ onSearch, onNavigate, cartCount }: HeaderProps)
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{ color: '#80808C' }}
-            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#141418] hover:text-[#F0F0F4] transition-all"
+            className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#141418] hover:text-[#F0F0F4] transition-all"
           >
             {menuOpen ? (
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -156,13 +161,9 @@ export default function Header({ onSearch, onNavigate, cartCount }: HeaderProps)
       {menuOpen && (
         <div
           style={{ backgroundColor: '#0D0D10', borderTop: '1px solid #1A1A20' }}
-          className="md:hidden px-4 py-3 flex flex-col gap-1"
+          className="lg:hidden px-4 py-3 flex flex-col gap-1"
         >
-          {[
-            { label: 'On Hand', action: 'on-hand' },
-            { label: 'Pre-Orders', action: 'pre-order' },
-            { label: 'New Arrivals', action: 'new-arrivals' },
-          ].map((item) => (
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.action}
               onClick={() => { onNavigate(item.action); setMenuOpen(false); }}

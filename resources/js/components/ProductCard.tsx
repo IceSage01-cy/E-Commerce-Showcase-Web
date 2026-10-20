@@ -49,6 +49,8 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
           <img
             src={product.images[0]}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500"
             style={{ transform: hovered ? 'scale(1.06)' : 'scale(1)' }}
             onError={() => setImgError(true)}

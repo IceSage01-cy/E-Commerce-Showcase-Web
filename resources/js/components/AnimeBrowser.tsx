@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Product } from '../data/products';
 import ProductCard from './ProductCard';
+import { usePaged, ShowMoreButton } from './ShowMore';
 
 interface AnimeBrowserProps {
   products: Product[];
@@ -42,6 +43,7 @@ export default function AnimeBrowser({ products, onView, onAddToCart }: AnimeBro
     () => (series && character ? seriesProducts.filter((p) => p.character === character) : []),
     [seriesProducts, series, character]
   );
+  const pagedFigures = usePaged(figures);
 
   function Breadcrumbs() {
     return (
@@ -120,11 +122,14 @@ export default function AnimeBrowser({ products, onView, onAddToCart }: AnimeBro
         {figures.length === 0 ? (
           emptyText('No figures found for this character yet.')
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-            {figures.map((p) => (
-              <ProductCard key={p.id} product={p} onView={onView} onAddToCart={onAddToCart} size="sm" />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+              {pagedFigures.shown.map((p) => (
+                <ProductCard key={p.id} product={p} onView={onView} onAddToCart={onAddToCart} size="sm" />
+              ))}
+            </div>
+            <ShowMoreButton remaining={pagedFigures.remaining} onClick={pagedFigures.more} />
+          </>
         )}
       </div>
     );

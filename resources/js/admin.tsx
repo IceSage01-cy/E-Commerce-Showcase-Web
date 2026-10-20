@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import AdminPage from './pages/AdminPage';
 import type { Banner, BannerFormData } from './components/BannersTab';
-import type { Product } from './data/products';
+import type { Product, CategoryInfo, BulkAction } from './data/products';
+import type { CategoryFormData } from './components/CategoriesTab';
 
 /** Pull the most useful message out of a Laravel error response (validation errors first). */
 function apiError(err: unknown, fallback: string): string {
@@ -16,33 +17,43 @@ function apiError(err: unknown, fallback: string): string {
   return fallback;
 }
 
+/** Put one product at the top of the list (the server sorts the same way: last changed first). */
+const moveToTop = (list: Product[], updated: Product) => [updated, ...list.filter((p) => p.id !== updated.id)];
+
 function AdminRoot() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
 
   useEffect(() => {
     axios.get('/admin/api/banners').then((res) => setBanners(res.data));
     axios.get('/admin/api/products').then((res) => setProducts(res.data));
+    axios.get('/admin/api/categories').then((res) => setCategories(res.data));
   }, []);
 
-  async function handleAddProduct(data: Omit<Product, 'id'>) {
+  // Save handlers resolve to true/false so the form can stay open (with what you typed) when the server says no.
+  async function handleAddProduct(data: Omit<Product, 'id'>): Promise<boolean> {
     try {
       const res = await axios.post('/admin/api/products', data);
       setProducts((prev) => [res.data, ...prev]);
+      return true;
     } catch (err) {
       console.error('Failed to add product', err);
       alert(apiError(err, 'Could not save the product. Please check the form and try again.'));
+      return false;
     }
   }
 
-  async function handleEditProduct(updated: Product) {
+  async function handleEditProduct(updated: Product): Promise<boolean> {
     const { id, ...data } = updated;
     try {
       const res = await axios.put(`/admin/api/products/${id}`, data);
-      setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)));
+      setProducts((prev) => moveToTop(prev, res.data));
+      return true;
     } catch (err) {
       console.error('Failed to update product', err);
       alert(apiError(err, 'Could not save the product. Please check the form and try again.'));
+      return false;
     }
   }
 
@@ -56,18 +67,57 @@ function AdminRoot() {
     }
   }
 
-  // Optimistic: flip the badge instantly, tell the server, roll back if it fails.
-  async function handleToggleStock(id: string, inStock: boolean) {
-    const setFlag = (value: boolean) =>
-      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, inStock: value } : p)));
-
-    setFlag(inStock);
+  // One-click switches. Optimistic: flip it (and move the row to the top) instantly,
+  // tell the server, flip back if it fails.
+  async function quickToggle(id: string, field: 'inStock' | 'isFeatured', value: boolean, url: string, failMsg: string) {
+    setProducts((prev) => {
+      const current = prev.find((p) => p.id === id);
+      return current ? moveToTop(prev, { ...current, [field]: value }) : prev;
+    });
     try {
-      await axios.patch(`/admin/api/products/${id}/stock`, { inStock });
+      await axios.patch(url, { [field]: value });
     } catch (err) {
-      setFlag(!inStock);
-      console.error('Failed to update stock status', err);
-      alert(apiError(err, 'Could not update stock status. Please try again.'));
+      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: !value } : p)));
+      console.error(failMsg, err);
+      alert(apiError(err, `${failMsg}. Please try again.`));
+    }
+  }
+
+  const handleToggleStock = (id: string, inStock: boolean) =>
+    quickToggle(id, 'inStock', inStock, `/admin/api/products/${id}/stock`, 'Could not update stock status');
+
+  const handleToggleFeatured = (id: string, isFeatured: boolean) =>
+    quickToggle(id, 'isFeatured', isFeatured, `/admin/api/products/${id}/featured`, 'Could not update Japan New Arrivals');
+
+  // Many products, one request.
+  async function handleBulk(ids: string[], action: BulkAction): Promise<boolean> {
+    try {
+      const res = await axios.post('/admin/api/products/bulk', { ids: ids.map(Number), action });
+      if (action === 'delete') {
+        const gone = new Set<string>(res.data.deleted);
+        setProducts((prev) => prev.filter((p) => !gone.has(p.id)));
+      } else {
+        const changed: Product[] = res.data.products;
+        const changedIds = new Set(changed.map((p) => p.id));
+        setProducts((prev) => [...changed, ...prev.filter((p) => !changedIds.has(p.id))]);
+      }
+      return true;
+    } catch (err) {
+      console.error('Bulk update failed', err);
+      alert(apiError(err, 'Could not update the selected products. Please try again.'));
+      return false;
+    }
+  }
+
+  async function handleEditCategory(id: string, data: CategoryFormData): Promise<boolean> {
+    try {
+      const res = await axios.put(`/admin/api/categories/${id}`, data);
+      setCategories((prev) => prev.map((c) => (c.id === id ? res.data : c)));
+      return true;
+    } catch (err) {
+      console.error('Failed to update category', err);
+      alert(apiError(err, 'Could not save the category. Please try again.'));
+      return false;
     }
   }
 
@@ -93,6 +143,10 @@ function AdminRoot() {
       onEdit={handleEditProduct}
       onDelete={handleDeleteProduct}
       onToggleStock={handleToggleStock}
+      onToggleFeatured={handleToggleFeatured}
+      onBulk={handleBulk}
+      categories={categories}
+      onEditCategory={handleEditCategory}
       banners={banners}
       onAddBanner={handleAddBanner}
       onEditBanner={handleEditBanner}

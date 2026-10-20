@@ -13,19 +13,12 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div
-                style={{ background: 'linear-gradient(135deg, #FF2D78, #A855F7)' }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-              >
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1L14 5V11L8 15L2 11V5L8 1Z" fill="white" fillOpacity="0.9" />
-                </svg>
-              </div>
+              <img src="/logo.png" alt="" width={28} height={28} className="w-7 h-7 rounded-full flex-shrink-0" />
               <span
                 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }}
                 className="text-base font-700"
               >
-                Panda's Attict
+                Panda's Attic
               </span>
             </div>
             <p style={{ color: '#50505C' }} className="text-xs leading-relaxed">
@@ -36,7 +29,7 @@ export default function Footer() {
           {/* Shop */}
           <div>
             <p style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif' }} className="text-sm font-600 mb-3">Shop</p>
-            {['On Hand', 'Pre-Orders', 'New Arrivals', 'Sale Items'].map((l) => (
+            {['Anime Figures', 'Scale Figures', 'Rare / Exclusive Items', 'CHIX Figures', 'Japan New Arrivals'].map((l) => (
               <p key={l} style={{ color: '#50505C' }} className="text-xs mb-2 hover:text-[#80808C] cursor-pointer transition-colors">{l}</p>
             ))}
           </div>
@@ -62,7 +55,7 @@ export default function Footer() {
           style={{ borderTop: '1px solid #1A1A20', color: '#30303C' }}
           className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
         >
-          <p>© 2026 Panda's Attict. All rights reserved.</p>
+          <p>© 2026 Panda's Attic. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <p>Built with ❤️ for collectors, by collectors.</p>
           </div>

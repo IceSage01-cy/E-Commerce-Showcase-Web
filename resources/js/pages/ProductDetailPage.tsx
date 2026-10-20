@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import type { Product } from '../data/products';
 import { getStockStyle, formatPrice } from '../data/products';
 import ProductCard from '../components/ProductCard';
@@ -19,7 +20,15 @@ const categoryColor = {
 };
 
 export default function ProductDetailPage({ productId, onNavigate, onView, onAddToCart, products }: ProductDetailPageProps) {
-  const product = products.find((p) => p.id === productId);
+  // The shared list is slim (one photo, no description); load the full record for this page.
+  const [full, setFull] = useState<Product | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setFull(null);
+    axios.get(`/api/products/${productId}`).then((res) => { if (alive) setFull(res.data); }).catch(() => {});
+    return () => { alive = false; };
+  }, [productId]);
+  const product = (full && full.id === productId ? full : null) ?? products.find((p) => p.id === productId);
   const [activeImage, setActiveImage] = useState(0);
   const [descExpanded, setDescExpanded] = useState(false);
   const [added, setAdded] = useState(false);

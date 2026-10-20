@@ -1,11 +1,16 @@
 import { useState, useMemo } from 'react';
-import type { Product, Category } from '../data/products';
+import type { Product, Category, CategoryInfo } from '../data/products';
+import { COLLECTIONS } from '../data/products';
 import ProductCard from '../components/ProductCard';
+import { usePaged, ShowMoreButton } from '../components/ShowMore';
 import AnimeBrowser from '../components/AnimeBrowser';
 
 interface SearchPageProps {
   initialQuery: string;
   initialCategory?: string;
+  /** Main category (Anime Figures, Scale Figures, ...) to start filtered on. */
+  initialCollection?: string;
+  categories?: CategoryInfo[];
   onView: (id: string) => void;
   onAddToCart: (id: string) => void;
   onSearch: (q: string) => void;
@@ -14,15 +19,23 @@ interface SearchPageProps {
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 
-export default function SearchPage({ initialQuery, initialCategory, onView, onAddToCart, onSearch, products }: SearchPageProps) {
+export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = [], onView, onAddToCart, onSearch, products }: SearchPageProps) {
   const [query, setQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
     (initialCategory as Category) || 'all'
   );
 
+  // (declared below, after `results`)
+  const [collectionFilter, setCollectionFilter] = useState<string>(initialCollection || 'all');
+
   const results = useMemo(() => {
     let list = [...products];
+
+    // Main category filter
+    if (collectionFilter !== 'all') {
+      list = list.filter((p) => p.collection === collectionFilter);
+    }
 
     // Category filter (on-hand items must also be in stock to count as available)
     if (categoryFilter !== 'all') {
@@ -50,7 +63,8 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
     else if (sortBy === 'newest') list.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
 
     return list;
-  }, [query, sortBy, categoryFilter, products]);
+  }, [query, sortBy, categoryFilter, collectionFilter, products]);
+  const paged = usePaged(results);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -125,6 +139,26 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
             </button>
           </form>
 
+          {collectionFilter !== 'all' && (
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl font-800 mb-4">
+              {categories.find((c) => c.slug === collectionFilter)?.label
+                ?? COLLECTIONS.find((c) => c.slug === collectionFilter)?.label
+                ?? 'Shop'}
+            </h1>
+          )}
+
+          {/* Main category pills */}
+          <div className="flex gap-1 flex-wrap mb-3">
+            {[{ slug: 'all', label: 'All Categories' }, ...COLLECTIONS].map((c) => (
+              <Pill
+                key={c.slug}
+                label={categories.find((x) => x.slug === c.slug)?.label ?? c.label}
+                active={collectionFilter === c.slug}
+                onClick={() => setCollectionFilter(c.slug)}
+              />
+            ))}
+          </div>
+
           {/* Filters row */}
           <div className="flex flex-wrap gap-2 items-center">
             {/* Category */}
@@ -180,7 +214,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
 
         {!query.trim() ? (
           <AnimeBrowser
-            key={categoryFilter}
+            key={`${collectionFilter}-${categoryFilter}`}
             products={results}
             onView={onView}
             onAddToCart={onAddToCart}
@@ -199,7 +233,7 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
               Try a different search term, or browse all categories below.
             </p>
             <button
-              onClick={() => { setQuery(''); setCategoryFilter('all'); }}
+              onClick={() => { setQuery(''); setCategoryFilter('all'); setCollectionFilter('all'); }}
               style={{ background: '#FF2D78', fontFamily: 'Outfit, sans-serif' }}
               className="mt-2 px-6 py-2.5 rounded-full text-white text-sm font-600"
             >
@@ -207,11 +241,14 @@ export default function SearchPage({ initialQuery, initialCategory, onView, onAd
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-            {results.map((p) => (
-              <ProductCard key={p.id} product={p} onView={onView} onAddToCart={onAddToCart} size="sm" />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+              {paged.shown.map((p) => (
+                <ProductCard key={p.id} product={p} onView={onView} onAddToCart={onAddToCart} size="sm" />
+              ))}
+            </div>
+            <ShowMoreButton remaining={paged.remaining} onClick={paged.more} />
+          </>
         )}
       </div>
     </div>

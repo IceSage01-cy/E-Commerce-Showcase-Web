@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ImageProxyController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +17,7 @@ Route::get('/', function () {
 
 // Public, read-only — used by the homepage HeroSlider and storefront.
 Route::get('/api/banners', [BannerController::class, 'index'])->name('banners.index');
+Route::get('/api/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/api/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/api/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
@@ -45,8 +48,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminProductController::class, 'index'])->name('index');
             Route::post('/', [AdminProductController::class, 'store'])->name('store');
             Route::put('/{product}', [AdminProductController::class, 'update'])->name('update');
+            Route::post('/bulk', [AdminProductController::class, 'bulk'])->name('bulk');
             Route::patch('/{product}/stock', [AdminProductController::class, 'setStock'])->name('stock');
+            Route::patch('/{product}/featured', [AdminProductController::class, 'setFeatured'])->name('featured');
             Route::delete('/{product}', [AdminProductController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('api/categories')->name('categories.')->group(function () {
+            Route::get('/', [AdminCategoryController::class, 'index'])->name('index');
+            Route::put('/{category}', [AdminCategoryController::class, 'update'])->name('update');
         });
 
         Route::post('/api/uploads', [AdminUploadController::class, 'store'])->name('uploads.store');

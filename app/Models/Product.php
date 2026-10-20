@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CatalogCache;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,13 @@ class Product extends Model
     /** @use HasFactory<ProductFactory> */
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        // Any change makes the cached public product list stale.
+        static::saved(fn () => CatalogCache::bump());
+        static::deleted(fn () => CatalogCache::bump());
+    }
+
     protected $fillable = [
         'name',
         'series',
@@ -19,6 +27,7 @@ class Product extends Model
         'sale_price',
         'images',
         'category',
+        'collection',
         'condition',
         'in_stock',
         'is_featured',
@@ -40,6 +49,20 @@ class Product extends Model
     ];
 
     /** Shape matching the frontend's `Product` interface (resources/js/data/products.ts). */
+    /**
+     * Slim version for the storefront list: no description and only the first photo, because the list
+     * carries every product. The full record (all photos, description) comes from /api/products/{id}.
+     */
+    public function toListItem(): array
+    {
+        return array_merge($this->toFrontend(), [
+            'images' => array_slice($this->images ?? [], 0, 1),
+            'description' => '',
+            'manufacturer' => '',
+            'releaseDate' => null,
+        ]);
+    }
+
     public function toFrontend(): array
     {
         return [
@@ -51,6 +74,7 @@ class Product extends Model
             'salePrice' => $this->sale_price !== null ? (float) $this->sale_price : null,
             'images' => $this->images ?? [],
             'category' => $this->category,
+            'collection' => $this->collection,
             'condition' => $this->condition,
             'inStock' => $this->in_stock,
             'isFeatured' => $this->is_featured,
