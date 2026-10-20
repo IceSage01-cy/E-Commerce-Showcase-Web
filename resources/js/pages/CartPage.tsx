@@ -30,7 +30,7 @@ interface ReceiptMeta {
   dateStr: string;
 }
 
-const PAYMENT_OPTIONS = ['Pre-Order', 'Cash on Pickup'];
+const PAYMENT_OPTIONS = ['GCASH', 'MAYA', 'BANK TRANSFER', 'PICKUP','PRE-ORDER'];
 
 const S = {
   bg: '#0A0A0B',
