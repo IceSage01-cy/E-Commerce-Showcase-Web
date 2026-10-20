@@ -13,11 +13,8 @@ class Category extends Model
         'sublabel',
         'description',
         'accent',
-<<<<<<< HEAD
         'font',
         'style',
-=======
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
         'image_url',
         'sort_order',
     ];
@@ -35,11 +32,8 @@ class Category extends Model
             'sublabel' => $this->sublabel ?? '',
             'description' => $this->description ?? '',
             'accent' => $this->accent,
-<<<<<<< HEAD
             'font' => $this->font ?? 'Outfit',
             'style' => $this->style ?? 'classic',
-=======
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
             'image' => $this->image_url,
             'sortOrder' => $this->sort_order,
         ];

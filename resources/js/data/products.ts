@@ -29,7 +29,6 @@ export function collectionLabel(slug: string): string {
   return COLLECTIONS.find((c) => c.slug === slug)?.label ?? slug;
 }
 
-<<<<<<< HEAD
 export type CategoryStyle = 'classic' | 'bold' | 'glow';
 
 export const CATEGORY_FONTS = ['Outfit', 'Inter', 'Poppins', 'Playfair Display', 'Bebas Neue', 'Bangers'];
@@ -39,8 +38,6 @@ export const CATEGORY_STYLES: { value: CategoryStyle; label: string }[] = [
   { value: 'glow', label: 'Glow' },
 ];
 
-=======
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 /** A main category with its admin-managed background picture (from /api/categories). */
 export interface CategoryInfo {
   id: string;
@@ -49,11 +46,8 @@ export interface CategoryInfo {
   sublabel: string;
   description: string;
   accent: string;
-<<<<<<< HEAD
   font: string;
   style: CategoryStyle;
-=======
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
   image: string | null;
   sortOrder: number;
 }

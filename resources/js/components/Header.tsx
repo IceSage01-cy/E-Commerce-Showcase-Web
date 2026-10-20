@@ -5,10 +5,7 @@ const NAV_ITEMS = [
   { label: 'Scale Figures', action: 'scale-figures' },
   { label: 'Rare / Exclusive', action: 'rare-exclusive' },
   { label: 'CHIX Figures', action: 'chix-figures' },
-<<<<<<< HEAD
   { label: 'Pre-Orders', action: 'pre-order' },
-=======
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
   { label: 'New Arrivals', action: 'new-arrivals' },
 ];
 

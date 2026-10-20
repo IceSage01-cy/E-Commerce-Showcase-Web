@@ -7,17 +7,10 @@ interface CategoriesSectionProps {
 
 /** Shown until /api/categories answers (or if it ever fails), so the section never goes blank. */
 const FALLBACK: CategoryInfo[] = [
-<<<<<<< HEAD
   { id: 'f1', slug: 'anime-figures', label: 'Anime Figures', sublabel: 'Characters from your favorite series', description: '', accent: '#FF2D78', font: 'Outfit', style: 'classic', image: null, sortOrder: 1 },
   { id: 'f2', slug: 'scale-figures', label: 'Scale Figures', sublabel: '1/7 · 1/6 · 1/8 and more', description: '', accent: '#A78BFA', font: 'Outfit', style: 'classic', image: null, sortOrder: 2 },
   { id: 'f3', slug: 'rare-exclusive', label: 'Rare / Exclusive Items', sublabel: 'Limited runs & hard-to-find pieces', description: '', accent: '#F59E0B', font: 'Outfit', style: 'classic', image: null, sortOrder: 3 },
   { id: 'f4', slug: 'chix-figures', label: 'CHIX Figures', sublabel: 'Our CHIX line', description: '', accent: '#22C55E', font: 'Outfit', style: 'classic', image: null, sortOrder: 4 },
-=======
-  { id: 'f1', slug: 'anime-figures', label: 'Anime Figures', sublabel: 'Characters from your favorite series', description: '', accent: '#FF2D78', image: null, sortOrder: 1 },
-  { id: 'f2', slug: 'scale-figures', label: 'Scale Figures', sublabel: '1/7 · 1/6 · 1/8 and more', description: '', accent: '#A78BFA', image: null, sortOrder: 2 },
-  { id: 'f3', slug: 'rare-exclusive', label: 'Rare / Exclusive Items', sublabel: 'Limited runs & hard-to-find pieces', description: '', accent: '#F59E0B', image: null, sortOrder: 3 },
-  { id: 'f4', slug: 'chix-figures', label: 'CHIX Figures', sublabel: 'Our CHIX line', description: '', accent: '#22C55E', image: null, sortOrder: 4 },
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
 ];
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -34,7 +27,6 @@ function Arrow({ color }: { color: string }) {
   );
 }
 
-<<<<<<< HEAD
 /** One category card: the admin-uploaded picture is the card's background; color, font and style come from Admin -> Categories. */
 export function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick?: () => void; wide?: boolean }) {
   const bold = cat.style === 'bold';
@@ -42,10 +34,6 @@ export function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClic
   const font = `'${cat.font || 'Outfit'}', Outfit, sans-serif`;
   const minH = wide ? 150 : 220;
 
-=======
-/** One category card: the admin-uploaded picture is the card's background. */
-function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () => void; wide?: boolean }) {
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
   return (
     <button
       type="button"
@@ -55,7 +43,6 @@ function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () =
         overflow: 'hidden',
         textAlign: 'left',
         width: '100%',
-<<<<<<< HEAD
         minHeight: minH,
         borderRadius: '0.875rem',
         border: `${bold ? 2 : 1}px solid ${hexToRgba(cat.accent, bold ? 0.9 : 0.3)}`,
@@ -66,16 +53,6 @@ function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () =
         cursor: onClick ? 'pointer' : 'default',
       }}
       className="group transition-all"
-=======
-        minHeight: wide ? 150 : 220,
-        borderRadius: '0.875rem',
-        border: `1px solid ${hexToRgba(cat.accent, 0.3)}`,
-        backgroundColor: '#141418',
-        // No picture yet: a soft accent gradient instead of an empty box.
-        backgroundImage: cat.image ? undefined : `linear-gradient(135deg, ${hexToRgba(cat.accent, 0.22)}, #141418 70%)`,
-      }}
-      className="group transition-all hover:border-opacity-70"
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
       aria-label={`Browse ${cat.label}`}
     >
       {cat.image && (
@@ -84,16 +61,11 @@ function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () =
           alt=""
           loading="lazy"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-<<<<<<< HEAD
           style={{ filter: bold ? 'brightness(0.75) saturate(1.3)' : 'brightness(0.62) saturate(1.1)' }}
-=======
-          style={{ filter: 'brightness(0.62) saturate(1.1)' }}
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
         />
       )}
       <div
         className="absolute inset-0"
-<<<<<<< HEAD
         style={{
           background: bold
             ? `linear-gradient(to top, ${hexToRgba(cat.accent, 0.55)} 0%, rgba(10,10,11,0.45) 55%, rgba(10,10,11,0.1) 100%)`
@@ -107,20 +79,6 @@ function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () =
             alignSelf: 'flex-start',
             backgroundColor: bold ? cat.accent : hexToRgba(cat.accent, 0.16),
             color: bold ? '#0A0A0B' : cat.accent,
-=======
-        style={{ background: 'linear-gradient(to top, rgba(10,10,11,0.92) 0%, rgba(10,10,11,0.35) 55%, rgba(10,10,11,0.1) 100%)' }}
-      />
-
-      <div
-        className="relative flex flex-col justify-end h-full p-4"
-        style={{ minHeight: wide ? 150 : 220 }}
-      >
-        <span
-          style={{
-            alignSelf: 'flex-start',
-            backgroundColor: hexToRgba(cat.accent, 0.16),
-            color: cat.accent,
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
             border: `1px solid ${hexToRgba(cat.accent, 0.35)}`,
             fontFamily: 'Outfit, sans-serif',
           }}
@@ -130,7 +88,6 @@ function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () =
         </span>
         <div className="flex items-end justify-between gap-2">
           <div className="min-w-0">
-<<<<<<< HEAD
             <h3
               style={{
                 fontFamily: font,
@@ -146,13 +103,6 @@ function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick: () =
             </h3>
             {cat.sublabel && (
               <p style={{ color: '#D0D0DA', fontFamily: 'Inter, sans-serif', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }} className="text-xs font-500 mt-0.5">
-=======
-            <h3 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-lg font-800 leading-tight">
-              {cat.label}
-            </h3>
-            {cat.sublabel && (
-              <p style={{ color: '#B0B0BC', fontFamily: 'Inter, sans-serif' }} className="text-xs font-500 mt-0.5">
->>>>>>> 2e7fe6d42416307addf4ea9d6dd51c414ed52629
                 {cat.sublabel}
               </p>
             )}
