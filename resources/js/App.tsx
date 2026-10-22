@@ -8,7 +8,7 @@ import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
 import CartPage from './pages/CartPage';
 import type { Product, CategoryInfo } from './data/products';
-import { COLLECTION_SLUGS } from './data/products';
+import { FALLBACK_CATEGORIES } from './data/products';
 
 type Route =
   | { type: 'home' }
@@ -47,7 +47,7 @@ export default function App() {
     if (page === 'home') setRoute({ type: 'home' });
     else if (page === 'cart') setRoute({ type: 'cart' });
     else if (page === 'new-arrivals') setRoute({ type: 'new-arrivals' });
-    else if (COLLECTION_SLUGS.includes(page)) setRoute({ type: 'collection', collection: page });
+    else if (navCategories.some((c) => c.slug === page)) setRoute({ type: 'collection', collection: page });
     else if (['on-hand', 'pre-order', 'new-release'].includes(page)) {
       setRoute({ type: 'category', category: page });
     } else {
@@ -86,6 +86,12 @@ export default function App() {
     toastTimer.current = setTimeout(() => setCartToast(null), 3000);
   }, [products]);
 
+  // Menu + routing follow the categories managed in the admin panel (defaults until they load).
+  const navCategories = useMemo(
+    () => (categories.length ? categories : FALLBACK_CATEGORIES).slice().sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
+
   const sortedNew = useMemo(
     () => [...products].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
     [products],
@@ -93,7 +99,7 @@ export default function App() {
 
   return (
     <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
-      <Header onSearch={(q) => handleSearch(q)} onNavigate={navigate} cartCount={cart.length} />
+      <Header categories={navCategories} onSearch={(q) => handleSearch(q)} onNavigate={navigate} cartCount={cart.length} />
 
       <main style={{ paddingBottom: 16 }}>
         {productsLoading && route.type === 'home' && products.length === 0 ? (
@@ -116,6 +122,7 @@ export default function App() {
           <SearchPage
             initialQuery={route.query}
             initialCategory={route.category}
+            categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}
             onSearch={handleSearch}
@@ -127,6 +134,7 @@ export default function App() {
             key={`category-${route.category}`}
             initialQuery=""
             initialCategory={route.category}
+            categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}
             onSearch={handleSearch}
@@ -138,7 +146,7 @@ export default function App() {
             key={`collection-${route.collection}`}
             initialQuery=""
             initialCollection={route.collection}
-            categories={categories}
+            categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}
             onSearch={handleSearch}

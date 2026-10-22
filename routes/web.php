@@ -56,7 +56,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::prefix('api/categories')->name('categories.')->group(function () {
             Route::get('/', [AdminCategoryController::class, 'index'])->name('index');
+            Route::post('/', [AdminCategoryController::class, 'store'])->name('store');
             Route::put('/{category}', [AdminCategoryController::class, 'update'])->name('update');
+            Route::delete('/{category}', [AdminCategoryController::class, 'destroy'])->name('destroy');
         });
 
         Route::post('/api/uploads', [AdminUploadController::class, 'store'])->name('uploads.store');

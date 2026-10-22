@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import type { Product, Category, Condition, Collection, CategoryInfo, BulkAction } from '../data/products';
-import { getStockStyle, formatPrice, CONDITIONS, COLLECTIONS, collectionLabel, normalizeCondition } from '../data/products';
+import { getStockStyle, formatPrice, CONDITIONS, collectionLabel, normalizeCondition } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
 import CategoriesTab, { type CategoryFormData } from '../components/CategoriesTab';
 import ImageDropzone from '../components/ImageDropzone';
@@ -15,7 +15,9 @@ interface AdminPageProps {
   onBulk: (ids: string[], action: BulkAction) => Promise<boolean>;
   onNavigate: (page: string) => void;
   categories: CategoryInfo[];
+  onAddCategory: (data: CategoryFormData) => Promise<boolean>;
   onEditCategory: (id: string, data: CategoryFormData) => Promise<boolean>;
+  onDeleteCategory: (id: string, moveTo?: string) => Promise<boolean>;
   banners: Banner[];
   onAddBanner: (b: BannerFormData) => void;
   onEditBanner: (id: string, b: BannerFormData) => void;
@@ -35,7 +37,7 @@ const categoryColor: Record<Category, { text: string; bg: string }> = {
 
 const COLS = '28px minmax(0,2.2fr) minmax(0,1.3fr) 64px 84px 116px 104px 72px';
 
-const emptyForm = (collection: Collection = 'anime-figures'): Omit<Product, 'id'> => ({
+const emptyForm = (collection: Collection = ''): Omit<Product, 'id'> => ({
   name: '',
   series: '',
   character: '',
@@ -57,7 +59,7 @@ const emptyForm = (collection: Collection = 'anime-figures'): Omit<Product, 'id'
 
 export default function AdminPage({
   products, onAdd, onEdit, onDelete, onToggleStock, onToggleFeatured, onBulk, onNavigate,
-  categories, onEditCategory, banners, onAddBanner, onEditBanner, onDeleteBanner,
+  categories, onAddCategory, onEditCategory, onDeleteCategory, banners, onAddBanner, onEditBanner, onDeleteBanner,
 }: AdminPageProps) {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
@@ -146,7 +148,8 @@ export default function AdminPage({
   }
 
   function openAdd() {
-    setForm(emptyForm(COLLECTIONS.find((c) => c.slug === collectionFilter)?.slug));
+    // Pre-select the category being filtered on, otherwise the first one.
+    setForm(emptyForm(categories.find((c) => c.slug === collectionFilter)?.slug ?? categories[0]?.slug));
     setModal({ mode: 'add' });
   }
   function openEdit(p: Product) {
@@ -175,11 +178,8 @@ export default function AdminPage({
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Chip labels follow the names set in Admin -> Categories.
-  const collectionOptions = COLLECTIONS.map((c) => ({
-    slug: c.slug,
-    label: categories.find((x) => x.slug === c.slug)?.label ?? c.label,
-  }));
+  // Chips and filters follow the categories set in Admin -> Categories.
+  const collectionOptions = categories.map((c) => ({ slug: c.slug, label: c.label }));
 
   const inputStyle = {
     backgroundColor: '#0D0D10',
@@ -510,7 +510,7 @@ export default function AdminPage({
                   aria-label="Filter by category"
                 >
                   <option value="all">All categories</option>
-                  {COLLECTIONS.map((c) => (
+                  {collectionOptions.map((c) => (
                     <option key={c.slug} value={c.slug}>{c.label}</option>
                   ))}
                 </select>
@@ -639,7 +639,7 @@ export default function AdminPage({
 
                             {/* Category (main category + listing type) */}
                             <div className="min-w-0">
-                              <p style={{ color: '#C8C8D2', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="truncate">{collectionLabel(p.collection)}</p>
+                              <p style={{ color: '#C8C8D2', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="truncate">{collectionLabel(p.collection, categories)}</p>
                               <span
                                 style={{
                                   backgroundColor: cc.bg,
@@ -755,13 +755,14 @@ export default function AdminPage({
 
           {/* ── CATEGORIES ── */}
           {tab === 'categories' && (
-            <CategoriesTab categories={categories} onEdit={onEditCategory} />
+            <CategoriesTab categories={categories} products={products} onAdd={onAddCategory} onEdit={onEditCategory} onDelete={onDeleteCategory} />
           )}
 
           {/* ── BANNERS ── */}
           {tab === 'banners' && (
             <BannersTab
               banners={banners}
+              categories={categories}
               onAdd={onAddBanner}
               onEdit={onEditBanner}
               onDelete={onDeleteBanner}

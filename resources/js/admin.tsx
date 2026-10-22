@@ -121,6 +121,35 @@ function AdminRoot() {
     }
   }
 
+  async function handleAddCategory(data: CategoryFormData): Promise<boolean> {
+    try {
+      const res = await axios.post('/admin/api/categories', data);
+      setCategories((prev) => [...prev, res.data]);
+      return true;
+    } catch (err) {
+      console.error('Failed to add category', err);
+      alert(apiError(err, 'Could not add the category. Please check the form and try again.'));
+      return false;
+    }
+  }
+
+  // Products filed under a deleted category are moved server-side; mirror that here so the list is right without a reload.
+  async function handleDeleteCategory(id: string, moveTo?: string): Promise<boolean> {
+    const gone = categories.find((c) => c.id === id);
+    try {
+      await axios.delete(`/admin/api/categories/${id}`, { data: { moveTo } });
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      if (gone && moveTo) {
+        setProducts((prev) => prev.map((p) => (p.collection === gone.slug ? { ...p, collection: moveTo } : p)));
+      }
+      return true;
+    } catch (err) {
+      console.error('Failed to delete category', err);
+      alert(apiError(err, 'Could not delete the category. Please try again.'));
+      return false;
+    }
+  }
+
   async function handleAddBanner(data: BannerFormData) {
     const res = await axios.post('/admin/api/banners', data);
     setBanners((prev) => [...prev, res.data]);
@@ -146,7 +175,9 @@ function AdminRoot() {
       onToggleFeatured={handleToggleFeatured}
       onBulk={handleBulk}
       categories={categories}
+      onAddCategory={handleAddCategory}
       onEditCategory={handleEditCategory}
+      onDeleteCategory={handleDeleteCategory}
       banners={banners}
       onAddBanner={handleAddBanner}
       onEditBanner={handleEditBanner}

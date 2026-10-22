@@ -8,30 +8,16 @@ export type Category = 'on-hand' | 'pre-order' | 'new-release';
 /** Things the admin can do to many products in one request. */
 export type BulkAction = 'feature' | 'unfeature' | 'in_stock' | 'out_of_stock' | 'delete';
 
-/** Main storefront category the item is filed under. */
-export type Collection = 'anime-figures' | 'scale-figures' | 'rare-exclusive' | 'chix-figures';
+/** Main storefront category the item is filed under: the `slug` of a category managed in Admin -> Categories. */
+export type Collection = string;
 
 /** Box condition: Mint In Sealed Box, Mint In Box, Box Included, or no box. */
 export type Condition = 'MISB' | 'MIB' | 'BIB' | 'LOOSE';
 
 export const CONDITIONS: Condition[] = ['MISB', 'MIB', 'BIB', 'LOOSE'];
 
-export const COLLECTIONS: { slug: Collection; label: string }[] = [
-  { slug: 'anime-figures', label: 'Anime Figures' },
-  { slug: 'scale-figures', label: 'Scale Figures' },
-  { slug: 'rare-exclusive', label: 'Rare / Exclusive Items' },
-  { slug: 'chix-figures', label: 'CHIX Figures' },
-];
-
-export const COLLECTION_SLUGS = COLLECTIONS.map((c) => c.slug) as string[];
-
-export function collectionLabel(slug: string): string {
-  return COLLECTIONS.find((c) => c.slug === slug)?.label ?? slug;
-}
-
 export type CategoryStyle = 'classic' | 'bold' | 'glow';
 
-export const CATEGORY_FONTS = ['Outfit', 'Inter', 'Poppins', 'Playfair Display', 'Bebas Neue', 'Bangers'];
 export const CATEGORY_STYLES: { value: CategoryStyle; label: string }[] = [
   { value: 'classic', label: 'Classic' },
   { value: 'bold', label: 'Bold' },
@@ -46,10 +32,22 @@ export interface CategoryInfo {
   sublabel: string;
   description: string;
   accent: string;
-  font: string;
   style: CategoryStyle;
   image: string | null;
   sortOrder: number;
+}
+
+/** Shown until /api/categories answers (or if it ever fails), so the menu and the homepage section are never blank. */
+export const FALLBACK_CATEGORIES: CategoryInfo[] = [
+  { id: 'f1', slug: 'anime-figures', label: 'Anime Figures', sublabel: 'Characters from your favorite series', description: '', accent: '#FF2D78', style: 'classic', image: null, sortOrder: 1 },
+  { id: 'f2', slug: 'scale-figures', label: 'Scale Figures', sublabel: '1/7 · 1/6 · 1/8 and more', description: '', accent: '#A78BFA', style: 'classic', image: null, sortOrder: 2 },
+  { id: 'f3', slug: 'rare-exclusive', label: 'Rare / Exclusive Items', sublabel: 'Limited runs & hard-to-find pieces', description: '', accent: '#F59E0B', style: 'classic', image: null, sortOrder: 3 },
+  { id: 'f4', slug: 'chix-figures', label: 'CHIX Figures', sublabel: 'Our CHIX line', description: '', accent: '#22C55E', style: 'classic', image: null, sortOrder: 4 },
+];
+
+/** A category's name from its slug. Falls back to the slug itself (e.g. a product filed under a category that no longer exists). */
+export function collectionLabel(slug: string, categories: CategoryInfo[]): string {
+  return categories.find((c) => c.slug === slug)?.label ?? slug;
 }
 
 export interface Product {

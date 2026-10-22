@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use App\Support\CatalogCache;
 use Illuminate\Http\JsonResponse;
@@ -30,8 +31,8 @@ class ProductController extends Controller
             'images.*' => 'string|url|max:2048',
             // Listing type (availability): on-hand / pre-order / new-release.
             'category' => 'required|string|in:on-hand,pre-order,new-release',
-            // Main storefront category: Anime Figures / Scale Figures / Rare-Exclusive / CHIX Figures.
-            'collection' => ['required', 'string', Rule::in(array_column(config('catalog.collections'), 'slug'))],
+            // Main storefront category: any category that exists (managed in Admin -> Categories).
+            'collection' => ['required', 'string', Rule::in(Category::pluck('slug')->all())],
             'condition' => ['required', 'string', Rule::in(config('catalog.conditions'))],
             'inStock' => 'required|boolean',
             'isFeatured' => 'boolean',

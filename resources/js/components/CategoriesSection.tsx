@@ -1,17 +1,10 @@
-import type { CategoryInfo, Collection } from '../data/products';
+import type { CategoryInfo } from '../data/products';
+import { FALLBACK_CATEGORIES } from '../data/products';
 
 interface CategoriesSectionProps {
   categories: CategoryInfo[];
   onNavigate: (cat: string) => void;
 }
-
-/** Shown until /api/categories answers (or if it ever fails), so the section never goes blank. */
-const FALLBACK: CategoryInfo[] = [
-  { id: 'f1', slug: 'anime-figures', label: 'Anime Figures', sublabel: 'Characters from your favorite series', description: '', accent: '#FF2D78', font: 'Outfit', style: 'classic', image: null, sortOrder: 1 },
-  { id: 'f2', slug: 'scale-figures', label: 'Scale Figures', sublabel: '1/7 · 1/6 · 1/8 and more', description: '', accent: '#A78BFA', font: 'Outfit', style: 'classic', image: null, sortOrder: 2 },
-  { id: 'f3', slug: 'rare-exclusive', label: 'Rare / Exclusive Items', sublabel: 'Limited runs & hard-to-find pieces', description: '', accent: '#F59E0B', font: 'Outfit', style: 'classic', image: null, sortOrder: 3 },
-  { id: 'f4', slug: 'chix-figures', label: 'CHIX Figures', sublabel: 'Our CHIX line', description: '', accent: '#22C55E', font: 'Outfit', style: 'classic', image: null, sortOrder: 4 },
-];
 
 const hexToRgba = (hex: string, alpha: number) => {
   const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
@@ -27,11 +20,10 @@ function Arrow({ color }: { color: string }) {
   );
 }
 
-/** One category card: the admin-uploaded picture is the card's background; color, font and style come from Admin -> Categories. */
+/** One category card: the admin-uploaded picture is the card's background; color and style come from Admin -> Categories. */
 export function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClick?: () => void; wide?: boolean }) {
   const bold = cat.style === 'bold';
   const glow = cat.style === 'glow';
-  const font = `'${cat.font || 'Outfit'}', Outfit, sans-serif`;
   const minH = wide ? 150 : 220;
 
   return (
@@ -90,7 +82,7 @@ export function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClic
           <div className="min-w-0">
             <h3
               style={{
-                fontFamily: font,
+                fontFamily: 'Outfit, sans-serif',
                 color: '#F0F0F4',
                 textTransform: bold ? 'uppercase' : undefined,
                 letterSpacing: bold ? '0.03em' : undefined,
@@ -116,14 +108,22 @@ export function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClic
   );
 }
 
+/**
+ * Column spans on a 6-column grid so every row is full, whatever the number of categories:
+ * rows of three; a leftover single card spans the whole row, two leftovers share it.
+ */
+function spanFor(index: number, total: number): { cls: string; wide: boolean } {
+  const rem = total % 3;
+  const inLastRow = index >= total - rem;
+  if (rem === 1 && inLastRow) return { cls: 'sm:col-span-6', wide: true };
+  if (rem === 2 && inLastRow) return { cls: 'sm:col-span-3', wide: false };
+  return { cls: 'sm:col-span-2', wide: false };
+}
+
 export default function CategoriesSection({ categories, onNavigate }: CategoriesSectionProps) {
-  const list = (categories.length ? categories : FALLBACK)
+  const list = (categories.length ? categories : FALLBACK_CATEGORIES)
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder);
-
-  const isChix = (slug: Collection) => slug === 'chix-figures';
-  const main = list.filter((c) => !isChix(c.slug));
-  const chix = list.find((c) => isChix(c.slug));
 
   return (
     <section className="py-12 px-4" style={{ borderTop: '1px solid #1A1A20' }}>
@@ -140,18 +140,16 @@ export default function CategoriesSection({ categories, onNavigate }: Categories
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {main.map((cat) => (
-            <CategoryCard key={cat.slug} cat={cat} onClick={() => onNavigate(cat.slug)} />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
+          {list.map((cat, i) => {
+            const { cls, wide } = spanFor(i, list.length);
+            return (
+              <div key={cat.slug} className={cls}>
+                <CategoryCard cat={cat} wide={wide} onClick={() => onNavigate(cat.slug)} />
+              </div>
+            );
+          })}
         </div>
-
-        {/* CHIX Figures sits on its own row at the bottom */}
-        {chix && (
-          <div className="mt-4">
-            <CategoryCard cat={chix} wide onClick={() => onNavigate(chix.slug)} />
-          </div>
-        )}
       </div>
     </section>
   );

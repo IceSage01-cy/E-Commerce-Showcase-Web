@@ -1,21 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
 
-const NAV_ITEMS = [
-  { label: 'Anime Figures', action: 'anime-figures' },
-  { label: 'Scale Figures', action: 'scale-figures' },
-  { label: 'Rare / Exclusive', action: 'rare-exclusive' },
-  { label: 'CHIX Figures', action: 'chix-figures' },
+import type { CategoryInfo } from '../data/products';
+
+const EXTRA_NAV_ITEMS = [
   { label: 'Pre-Orders', action: 'pre-order' },
   { label: 'New Arrivals', action: 'new-arrivals' },
 ];
 
 interface HeaderProps {
+  /** Shop categories, shown first in the menu. */
+  categories: CategoryInfo[];
   onSearch: (query: string) => void;
   onNavigate: (page: string) => void;
   cartCount: number;
 }
 
-export default function Header({ onSearch, onNavigate, cartCount }: HeaderProps) {
+export default function Header({ categories, onSearch, onNavigate, cartCount }: HeaderProps) {
+  const NAV_ITEMS = [...categories.map((c) => ({ label: c.label, action: c.slug })), ...EXTRA_NAV_ITEMS];
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);

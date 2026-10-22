@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Product, Category, CategoryInfo } from '../data/products';
-import { COLLECTIONS } from '../data/products';
+import { FALLBACK_CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { usePaged, ShowMoreButton } from '../components/ShowMore';
 import AnimeBrowser from '../components/AnimeBrowser';
@@ -19,7 +19,7 @@ interface SearchPageProps {
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 
-export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = [], onView, onAddToCart, onSearch, products }: SearchPageProps) {
+export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = FALLBACK_CATEGORIES, onView, onAddToCart, onSearch, products }: SearchPageProps) {
   const [query, setQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
@@ -141,18 +141,16 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
 
           {collectionFilter !== 'all' && (
             <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl font-800 mb-4">
-              {categories.find((c) => c.slug === collectionFilter)?.label
-                ?? COLLECTIONS.find((c) => c.slug === collectionFilter)?.label
-                ?? 'Shop'}
+              {categories.find((c) => c.slug === collectionFilter)?.label ?? 'Shop'}
             </h1>
           )}
 
           {/* Main category pills */}
           <div className="flex gap-1 flex-wrap mb-3">
-            {[{ slug: 'all', label: 'All Categories' }, ...COLLECTIONS].map((c) => (
+            {[{ slug: 'all', label: 'All Categories' }, ...categories].map((c) => (
               <Pill
                 key={c.slug}
-                label={categories.find((x) => x.slug === c.slug)?.label ?? c.label}
+                label={c.label}
                 active={collectionFilter === c.slug}
                 onClick={() => setCollectionFilter(c.slug)}
               />

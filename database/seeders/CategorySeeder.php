@@ -9,9 +9,14 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        // Idempotent: identified by slug, never overwrites pictures/text edited in the admin panel.
+        // Only fills an empty table. The categories are managed from the admin panel now, so re-seeding must
+        // never bring back a default category the admin deleted (or touch pictures/text they edited).
+        if (Category::query()->exists()) {
+            return;
+        }
+
         foreach (config('catalog.collections') as $collection) {
-            Category::firstOrCreate(['slug' => $collection['slug']], $collection);
+            Category::create($collection);
         }
     }
 }

@@ -18,8 +18,7 @@ return [
 
     'default_collection' => 'anime-figures',
 
-    // Looks an admin can pick for each category card (Admin -> Categories).
-    'category_fonts' => ['Outfit', 'Inter', 'Poppins', 'Playfair Display', 'Bebas Neue', 'Bangers'],
+    // Card looks an admin can pick for each category (Admin -> Categories); the color is the category's `accent`.
     'category_styles' => ['classic', 'bold', 'glow'],
 
     'collections' => [

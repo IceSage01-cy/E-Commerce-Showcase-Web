@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 
+import type { CategoryInfo } from '../data/products';
+
 export interface Banner {
   id: string;
   title: string;
@@ -17,17 +19,15 @@ export type BannerFormData = Omit<Banner, 'id'>;
 
 interface BannersTabProps {
   banners: Banner[];
+  categories: CategoryInfo[];
   onAdd: (b: BannerFormData) => void;
   onEdit: (id: string, b: BannerFormData) => void;
   onDelete: (id: string) => void;
 }
 
-const CTA_ACTIONS = [
+/** Fixed pages a banner button can open; the shop's categories are added after these. */
+const PAGE_ACTIONS = [
   { value: 'new-arrivals', label: 'New Arrivals' },
-  { value: 'anime-figures', label: 'Anime Figures' },
-  { value: 'scale-figures', label: 'Scale Figures' },
-  { value: 'rare-exclusive', label: 'Rare / Exclusive Items' },
-  { value: 'chix-figures', label: 'CHIX Figures' },
   { value: 'on-hand', label: 'On Hand' },
   { value: 'pre-order', label: 'Pre-Order' },
   { value: 'home', label: 'Home' },
@@ -64,7 +64,8 @@ const label = {
   display: 'block',
 } as const;
 
-export default function BannersTab({ banners, onAdd, onEdit, onDelete }: BannersTabProps) {
+export default function BannersTab({ banners, categories, onAdd, onEdit, onDelete }: BannersTabProps) {
+  const CTA_ACTIONS = [...PAGE_ACTIONS, ...categories.map((c) => ({ value: c.slug, label: c.label }))];
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; id?: string } | null>(null);
   const [form, setForm] = useState<BannerFormData>(emptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
