@@ -304,7 +304,6 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
                   color: !inStock ? '#50505C' : '#FFFFFF',
                   fontFamily: 'Outfit, sans-serif',
                   transition: 'background 0.3s ease',
-                  boxShadow: !inStock ? 'none' : added ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(255,45,120,0.3)',
                 }}
                 className="flex-1 py-3.5 rounded-full text-base font-700 transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed"
               >
@@ -387,12 +386,11 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
             style={{
               background: added ? '#22C55E' : '#FF2D78',
               fontFamily: 'Outfit, sans-serif',
-              boxShadow: added ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(255,45,120,0.3)',
               transition: 'background 0.3s ease',
             }}
             className="w-full py-3.5 rounded-full text-white text-base font-700"
           >
-            {added ? '✓ Added to Cart!' : product.category === 'pre-order' ? `Reserve — ${formatPrice(product.salePrice ?? product.price)}` : `Add to Cart — ${formatPrice(product.salePrice ?? product.price)}`}
+            {added ? '✓ Added to Cart!' : product.category === 'pre-order' ? `Reserve: ${formatPrice(product.salePrice ?? product.price)}` : `Add to cart: ${formatPrice(product.salePrice ?? product.price)}`}
           </button>
         </div>
       )}

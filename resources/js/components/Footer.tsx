@@ -38,7 +38,7 @@ export default function Footer({ categories, onNavigate }: FooterProps) {
               </span>
             </div>
             <p style={{ color: '#50505C' }} className="text-xs leading-relaxed">
-              Your trusted source for anime figures, collectibles, and Japan pre-orders. Based in the Philippines.
+              Anime figures, collectibles and Japan pre-orders. Based in the Philippines.
             </p>
           </div>
 
@@ -80,9 +80,6 @@ export default function Footer({ categories, onNavigate }: FooterProps) {
           className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
         >
           <p>© 2026 Panda's Attic. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <p>Built with ❤️ for collectors, by collectors.</p>
-          </div>
         </div>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAdminAuthenticated;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,10 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth' => EnsureAdminAuthenticated::class,
         ]);
 
-        // Render terminates SSL and forwards requests internally over HTTP,
-        // so trust its proxy to correctly detect HTTPS, client IP, etc.
+        $middleware->web(append: [
+            SecurityHeaders::class,
+        ]);
+
+        // Render terminates SSL and forwards requests over HTTP from its own proxy. Only that directly
+        // connected proxy is trusted. Trusting every address would let a visitor set their own
+        // X-Forwarded-For header and get around the per-IP rate limits (login especially).
         $middleware->trustProxies(
-            at: '*',
+            at: ['REMOTE_ADDR'],
             headers: Request::HEADER_X_FORWARDED_FOR |
                 Request::HEADER_X_FORWARDED_HOST |
                 Request::HEADER_X_FORWARDED_PORT |

@@ -13,9 +13,8 @@ use App\Http\Controllers\ImageProxyController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Closures are avoided in routes so `route:cache` works in production.
+Route::view('/', 'welcome');
 
 // Public, read-only — used by the homepage HeroSlider and storefront.
 // Throttled per IP so the catalogue can't be hammered (each uncached list read is a database query).
@@ -41,9 +40,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     Route::middleware('admin.auth')->group(function () {
-        Route::get('/', function () {
-            return view('admin');
-        })->name('dashboard');
+        Route::view('/', 'admin')->name('dashboard');
 
         Route::prefix('api/banners')->name('banners.')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index'])->name('index');

@@ -42,17 +42,13 @@ const MARQUEE_CSS = `
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .hex-card:focus-visible { transform: translateY(-8px) scale(1.05); outline: 2px solid var(--accent); outline-offset: 6px; }
-.hex-frame {
-  filter: drop-shadow(0 0 10px var(--glow-soft));
-  transition: filter 0.35s;
-}
 .hex-image { transition: transform 0.6s; }
 .hex-tint {
   opacity: 0.25;
   transition: opacity 0.35s;
 }
 .hex-label {
-  transition: text-shadow 0.35s, letter-spacing 0.35s;
+  transition: letter-spacing 0.35s;
 }
 .hex-bar {
   width: 28px;
@@ -67,13 +63,9 @@ const MARQUEE_CSS = `
 @media (hover: hover) and (pointer: fine) {
   .category-marquee:hover .category-marquee-track { animation-play-state: paused; }
   .hex-card:hover { transform: translateY(-8px) scale(1.05); }
-  .hex-card:hover .hex-frame { filter: drop-shadow(0 0 24px var(--accent)); }
   .hex-card:hover .hex-image { transform: scale(1.15); }
   .hex-card:hover .hex-tint { opacity: 0.6; }
-  .hex-card:hover .hex-label {
-    text-shadow: 0 0 18px var(--accent), 0 1px 4px rgba(0, 0, 0, 0.7);
-    letter-spacing: 0.08em;
-  }
+  .hex-card:hover .hex-label { letter-spacing: 0.08em; }
   .hex-card:hover .hex-bar { width: 64px; }
   .hex-card:hover .hex-arrow {
     background-color: var(--accent);
@@ -91,10 +83,7 @@ const MARQUEE_CSS = `
 `;
 
 function HexCard({ cat, onClick, duplicate }: { cat: StripItem; onClick: () => void; duplicate: boolean }) {
-  const vars = {
-    '--accent': cat.accent,
-    '--glow-soft': hexToRgba(cat.accent, 0.55),
-  } as CSSProperties;
+  const vars = { '--accent': cat.accent } as CSSProperties;
 
   return (
     <button
@@ -106,7 +95,7 @@ function HexCard({ cat, onClick, duplicate }: { cat: StripItem; onClick: () => v
       style={{ ...vars, width: CARD_W, height: CARD_H }}
     >
       {/* Outer hexagon is the glowing accent border; the inner one holds the picture. */}
-      <div className="hex-frame relative w-full h-full" style={{ clipPath: HEX, background: cat.accent }}>
+      <div className="relative w-full h-full" style={{ clipPath: HEX, background: cat.accent }}>
         <div
           className="absolute overflow-hidden"
           style={{
@@ -139,7 +128,7 @@ function HexCard({ cat, onClick, duplicate }: { cat: StripItem; onClick: () => v
               style={{
                 fontFamily: 'Outfit, sans-serif',
                 color: '#FFFFFF',
-                textShadow: `0 0 12px ${hexToRgba(cat.accent, 0.8)}, 0 1px 4px rgba(0,0,0,0.7)`,
+                textShadow: '0 1px 4px rgba(0,0,0,0.7)',
                 lineHeight: 1.1,
               }}
             >

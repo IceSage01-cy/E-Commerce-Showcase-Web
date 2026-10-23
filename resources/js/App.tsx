@@ -162,7 +162,7 @@ export default function App() {
       <main style={{ paddingBottom: 16 }}>
         {productsLoading && route.type === 'home' && products.length === 0 ? (
           <div className="flex items-center justify-center" style={{ height: '50vh', color: 'var(--color-text-muted)', fontFamily: 'Karla, sans-serif', fontSize: 14 }}>
-            Setting the table…
+            Loading…
           </div>
         ) : route.type === 'home' && (
           <HomePage products={products} categories={navCategories} covers={animeCovers} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />

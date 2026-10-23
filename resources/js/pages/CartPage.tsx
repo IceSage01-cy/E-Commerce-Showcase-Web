@@ -93,7 +93,7 @@ function buildReceiptText(
   date: string
 ) {
   return [
-    ` PANDA'S ATTIC — ORDER REQUEST`,
+    ` PANDA'S ATTIC: ORDER REQUEST`,
     `Receipt No: ${receiptNo}`,
     `Date: ${date}`,
     `──────────────────────────`,
@@ -107,7 +107,7 @@ function buildReceiptText(
     `ITEMS`,
     ...items.map(
       (i) =>
-        `• ${i.product.name} x${i.qty}  —  ${formatPrice(
+        `• ${i.product.name} x${i.qty}  ·  ${formatPrice(
           (i.product.salePrice ?? i.product.price) * i.qty
         )}`
     ),
@@ -117,7 +117,7 @@ function buildReceiptText(
     ` This is an ORDER REQUEST only.`,
     `Send this to us to confirm your order:`,
     `Facebook: https://www.facebook.com/TOYcomManjiGangAuthenticFigures`,
-    `We'll reply within 24 hours. Thank you! 🐼`,
+    `We'll reply within 24 hours. Thank you!`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -615,7 +615,6 @@ export default function CartPage({
                 border: 'none',
                 cursor: 'pointer',
                 flex: 1,
-                boxShadow: `0 4px 20px ${S.primaryGlow}`,
               }}
             >
               Fill in Details →
@@ -760,7 +759,6 @@ export default function CartPage({
                 cursor: detailsValid ? 'pointer' : 'not-allowed',
                 flex: 1,
                 transition: 'all 0.15s',
-                boxShadow: detailsValid ? `0 4px 20px ${S.primaryGlow}` : 'none',
               }}
             >
               Generate Receipt →
@@ -794,7 +792,7 @@ export default function CartPage({
               marginBottom: 24,
             }}
           >
-            Screenshot this, download it as an image, or copy the text — then send it to us on Facebook.
+            Screenshot this, download it as an image, or copy the text, then send it to us on Facebook.
           </p>
 
           {/* Receipt card */}
@@ -806,7 +804,6 @@ export default function CartPage({
               borderRadius: '1rem',
               overflow: 'hidden',
               marginBottom: 20,
-              boxShadow: `0 0 40px rgba(255,45,120,0.08)`,
             }}
           >
             {/* Header */}
@@ -1183,7 +1180,6 @@ export default function CartPage({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                boxShadow: '0 4px 14px rgba(255,45,120,0.3)',
               }}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1299,7 +1295,7 @@ export default function CartPage({
                   flex: 1,
                 }}
               >
-                Done — Back to Shop
+                Back to shop
               </button>
             </div>
           </div>

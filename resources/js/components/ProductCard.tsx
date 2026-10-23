@@ -1,7 +1,6 @@
 import { memo, useState } from 'react';
 import type { Product } from '../data/products';
 import { getStockStyle, formatPrice } from '../data/products';
-import { hexToRgba } from '../lib/color';
 
 interface ProductCardProps {
   product: Product;
@@ -34,7 +33,7 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
         cursor: 'pointer',
         transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
         transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        boxShadow: hovered ? `0 18px 40px rgba(0,0,0,0.5), 0 0 28px ${hexToRgba(catColor.text, 0.35)}` : 'none',
+        boxShadow: hovered ? '0 18px 40px rgba(0,0,0,0.5)' : 'none',
       }}
       className="flex flex-col overflow-hidden group"
     >
@@ -119,7 +118,6 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
               style={{
                 background: '#FF2D78',
                 fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 4px 16px rgba(255,45,120,0.4)',
               }}
               className="px-5 py-2 rounded-full text-xs font-600 text-white transition-all hover:opacity-90 active:scale-95"
             >
