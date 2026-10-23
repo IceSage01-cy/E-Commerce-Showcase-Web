@@ -102,7 +102,19 @@ export default function App() {
 
   return (
     <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
-      <Header categories={navCategories} onSearch={(q) => handleSearch(q)} onNavigate={navigate} cartCount={cart.length} />
+      <Header
+        categories={navCategories}
+        onSearch={(q) => handleSearch(q)}
+        onNavigate={navigate}
+        cartCount={cart.length}
+        current={
+          route.type === 'collection' ? route.collection
+            : route.type === 'chix' ? CHIX_SLUG
+            : route.type === 'category' ? route.category
+            : route.type === 'new-arrivals' ? 'new-arrivals'
+            : null
+        }
+      />
 
       <main style={{ paddingBottom: 16 }}>
         {productsLoading && route.type === 'home' && products.length === 0 ? (

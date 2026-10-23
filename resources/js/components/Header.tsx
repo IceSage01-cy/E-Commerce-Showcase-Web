@@ -13,9 +13,11 @@ interface HeaderProps {
   onSearch: (query: string) => void;
   onNavigate: (page: string) => void;
   cartCount: number;
+  /** Nav action of the page being shown; that item stays highlighted. */
+  current?: string | null;
 }
 
-export default function Header({ categories, onSearch, onNavigate, cartCount }: HeaderProps) {
+export default function Header({ categories, onSearch, onNavigate, cartCount, current = null }: HeaderProps) {
   const NAV_ITEMS = [...categories.map((c) => ({ label: c.label, action: c.slug })), ...EXTRA_NAV_ITEMS];
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -68,7 +70,11 @@ export default function Header({ categories, onSearch, onNavigate, cartCount }: 
             <button
               key={item.action}
               onClick={() => onNavigate(item.action)}
-              style={{ color: '#80808C', fontFamily: 'Inter, sans-serif' }}
+              style={{
+                color: item.action === current ? '#FFFFFF' : '#80808C',
+                backgroundColor: item.action === current ? '#FF2D78' : undefined,
+                fontFamily: 'Inter, sans-serif',
+              }}
               className="px-2.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap hover:text-white hover:bg-[#FF2D78]"
             >
               {item.label}

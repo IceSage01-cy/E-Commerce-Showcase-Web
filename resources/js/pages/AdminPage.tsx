@@ -1009,26 +1009,28 @@ export default function AdminPage({
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {collectionOptions.map((c) => (
-                      <LabelChip key={c.slug} active={form.collection === c.slug} onClick={() => setForm((prev) => ({ ...prev, collection: c.slug, figureType: c.slug === CHIX_SLUG ? prev.figureType ?? null : null }))}>
+                      <LabelChip key={c.slug} active={form.collection === c.slug} onClick={() => setForm((prev) => ({ ...prev, collection: c.slug }))}>
                         {c.label}
                       </LabelChip>
                     ))}
                   </div>
                 </div>
-                {form.collection === CHIX_SLUG && (
-                  <div>
-                    <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
-                      Label: CHIX figure type * (shown on the CHIX "View all" page)
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {FIGURE_TYPES.map((t) => (
-                        <LabelChip key={t.value} active={form.figureType === t.value} onClick={() => set('figureType', t.value)}>
-                          {t.label}
-                        </LabelChip>
-                      ))}
-                    </div>
+                <div>
+                  <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
+                    Label: Prize / Scale {form.collection === CHIX_SLUG ? '* (required for CHIX)' : '(optional, click again to clear)'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {FIGURE_TYPES.map((t) => (
+                      <LabelChip
+                        key={t.value}
+                        active={form.figureType === t.value}
+                        onClick={() => set('figureType', form.figureType === t.value ? null : t.value)}
+                      >
+                        {t.label}
+                      </LabelChip>
+                    ))}
                   </div>
-                )}
+                </div>
                 <div>
                   <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
                     Label: listing type *

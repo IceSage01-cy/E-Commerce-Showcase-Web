@@ -33,7 +33,7 @@ class ProductController extends Controller
             'category' => 'required|string|in:on-hand,pre-order,new-release',
             // Main storefront category: any category that exists (managed in Admin -> Categories).
             'collection' => ['required', 'string', Rule::in(Category::pluck('slug')->all())],
-            // Prize / Scale split, required for (and only kept on) the CHIX Figures collection.
+            // Prize / Scale split. Required for the CHIX Figures collection; optional elsewhere.
             'figureType' => [
                 Rule::requiredIf($request->input('collection') === config('catalog.chix_collection')),
                 'nullable', 'string', Rule::in(config('catalog.figure_types')),
@@ -66,7 +66,7 @@ class ProductController extends Controller
             'images' => array_values(array_filter($data['images'] ?? [])),
             'category' => $data['category'],
             'collection' => $data['collection'],
-            'figure_type' => $data['collection'] === config('catalog.chix_collection') ? ($data['figureType'] ?? null) : null,
+            'figure_type' => $data['figureType'] ?? null,
             'condition' => $data['condition'],
             'in_stock' => $data['inStock'],
             'is_featured' => $data['isFeatured'] ?? false,
