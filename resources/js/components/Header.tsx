@@ -40,9 +40,10 @@ export default function Header({ categories, onSearch, onNavigate, cartCount, cu
   }
 
   return (
+    // Full window width, so the bar stays solid over the full-width hero as the page scrolls. Its content stays in the 1280px column.
     <header
-      style={{ backgroundColor: 'rgba(10,10,11,0.95)', borderBottom: '1px solid #1A1A20' }}
-      className="sticky top-0 z-50 backdrop-blur-md"
+      style={{ backgroundColor: 'rgba(10,10,11,0.95)', borderBottom: '1px solid #1A1A20', marginLeft: 'calc(50% - 50vw)' }}
+      className="sticky top-0 z-50 w-screen backdrop-blur-md"
     >
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
         <button
