@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import type { Product, Category, CategoryInfo } from '../data/products';
-import { FALLBACK_CATEGORIES } from '../data/products';
+import type { Product, Category, CategoryInfo, FigureType } from '../data/products';
+import { FALLBACK_CATEGORIES, CHIX_SLUG, FIGURE_TYPES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { usePaged, ShowMoreButton } from '../components/ShowMore';
 import AnimeBrowser, { type BrowseSplit } from '../components/AnimeBrowser';
@@ -31,6 +31,8 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
 
   // (declared below, after `results`)
   const [collectionFilter, setCollectionFilter] = useState<string>(initialCollection || 'all');
+  // Prize / Scale split for CHIX Figures.
+  const [figureTypeFilter, setFigureTypeFilter] = useState<FigureType | 'all'>('all');
 
   const results = useMemo(() => {
     let list = [...products];
@@ -46,6 +48,11 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
         p.category === categoryFilter &&
         (categoryFilter !== 'on-hand' || p.inStock)
       );
+    }
+
+    // Prize / Scale filter (CHIX Figures only)
+    if (figureTypeFilter !== 'all') {
+      list = list.filter((p) => p.figureType === figureTypeFilter);
     }
 
     // Text search. With no typed query, we skip this entirely and hand the
@@ -66,7 +73,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
     else if (sortBy === 'newest') list.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
 
     return list;
-  }, [query, sortBy, categoryFilter, collectionFilter, products]);
+  }, [query, sortBy, categoryFilter, collectionFilter, figureTypeFilter, products]);
   const paged = usePaged(results);
 
   function handleSearch(e: React.FormEvent) {
@@ -160,6 +167,21 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
             ))}
           </div>
 
+          {/* Prize / Scale row, under the categories, for the CHIX collection */}
+          {(collectionFilter === 'all' || collectionFilter === CHIX_SLUG) && (
+            <div className="flex gap-1 flex-wrap mb-3">
+              <Pill label="All Types" active={figureTypeFilter === 'all'} onClick={() => setFigureTypeFilter('all')} />
+              {FIGURE_TYPES.map((t) => (
+                <Pill
+                  key={t.value}
+                  label={t.label}
+                  active={figureTypeFilter === t.value}
+                  onClick={() => setFigureTypeFilter(t.value)}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Filters row */}
           <div className="flex flex-wrap gap-2 items-center">
             {/* Category */}
@@ -215,7 +237,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
 
         {!query.trim() ? (
           <AnimeBrowser
-            key={`${collectionFilter}-${categoryFilter}`}
+            key={`${collectionFilter}-${categoryFilter}-${figureTypeFilter}`}
             products={results}
             onView={onView}
             onAddToCart={onAddToCart}
@@ -236,7 +258,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
               Try a different search term, or browse all categories below.
             </p>
             <button
-              onClick={() => { setQuery(''); setCategoryFilter('all'); setCollectionFilter('all'); }}
+              onClick={() => { setQuery(''); setCategoryFilter('all'); setCollectionFilter('all'); setFigureTypeFilter('all'); }}
               style={{ background: '#FF2D78', fontFamily: 'Outfit, sans-serif' }}
               className="mt-2 px-6 py-2.5 rounded-full text-white text-sm font-600"
             >
