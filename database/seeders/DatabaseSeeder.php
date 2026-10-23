@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             BannerSeeder::class,
             ProductSeeder::class,
+            ChixFigureSeeder::class,
         ]);
     }
 }

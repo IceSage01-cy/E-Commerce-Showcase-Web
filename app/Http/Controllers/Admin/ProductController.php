@@ -33,6 +33,11 @@ class ProductController extends Controller
             'category' => 'required|string|in:on-hand,pre-order,new-release',
             // Main storefront category: any category that exists (managed in Admin -> Categories).
             'collection' => ['required', 'string', Rule::in(Category::pluck('slug')->all())],
+            // Prize / Scale split, required for (and only kept on) the CHIX Figures collection.
+            'figureType' => [
+                Rule::requiredIf($request->input('collection') === config('catalog.chix_collection')),
+                'nullable', 'string', Rule::in(config('catalog.figure_types')),
+            ],
             'condition' => ['required', 'string', Rule::in(config('catalog.conditions'))],
             'inStock' => 'required|boolean',
             'isFeatured' => 'boolean',
@@ -47,6 +52,7 @@ class ProductController extends Controller
 
     private const MESSAGES = [
         'name.unique' => 'A listing with this name, series and condition already exists.',
+        'figureType.required' => 'Pick a CHIX figure type (Prize or Scale).',
     ];
 
     private function mapped(array $data): array
@@ -60,6 +66,7 @@ class ProductController extends Controller
             'images' => array_values(array_filter($data['images'] ?? [])),
             'category' => $data['category'],
             'collection' => $data['collection'],
+            'figure_type' => $data['collection'] === config('catalog.chix_collection') ? ($data['figureType'] ?? null) : null,
             'condition' => $data['condition'],
             'in_stock' => $data['inStock'],
             'is_featured' => $data['isFeatured'] ?? false,

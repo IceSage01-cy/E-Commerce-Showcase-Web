@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import type { Product, Category, Condition, Collection, CategoryInfo, BulkAction } from '../data/products';
-import { getStockStyle, formatPrice, CONDITIONS, collectionLabel, normalizeCondition } from '../data/products';
+import { getStockStyle, formatPrice, CONDITIONS, collectionLabel, normalizeCondition, CHIX_SLUG, FIGURE_TYPES } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
 import CategoriesTab, { type CategoryFormData } from '../components/CategoriesTab';
 import ImageDropzone from '../components/ImageDropzone';
@@ -46,6 +46,7 @@ const emptyForm = (collection: Collection = ''): Omit<Product, 'id'> => ({
   images: [],
   category: 'on-hand',
   collection,
+  figureType: null,
   condition: 'MIB',
   inStock: true,
   isFeatured: false,
@@ -68,6 +69,7 @@ export default function AdminPage({
   const [deleteConfirm, setDeleteConfirm] = useState<string | 'bulk' | null>(null);
   const [search, setSearch] = useState('');
   const [collectionFilter, setCollectionFilter] = useState<string>('all');
+  const [figureFilter, setFigureFilter] = useState<'all' | 'prize' | 'scale'>('all');
   const [featuredFilter, setFeaturedFilter] = useState<'all' | 'featured' | 'not-featured'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -96,12 +98,13 @@ export default function AdminPage({
     const q = search.trim().toLowerCase();
     return products.filter((p) => {
       if (collectionFilter !== 'all' && p.collection !== collectionFilter) return false;
+      if (figureFilter !== 'all' && p.figureType !== figureFilter) return false;
       if (featuredFilter === 'featured' && !p.isFeatured) return false;
       if (featuredFilter === 'not-featured' && p.isFeatured) return false;
       if (!q) return true;
       return p.name.toLowerCase().includes(q) || p.series.toLowerCase().includes(q) || p.character.toLowerCase().includes(q);
     });
-  }, [products, search, collectionFilter, featuredFilter]);
+  }, [products, search, collectionFilter, featuredFilter, figureFilter]);
 
   // Only count ticks for products that still exist (a delete elsewhere can't leave a phantom selection).
   const selectedIds = useMemo(() => products.filter((p) => selected.has(p.id)).map((p) => p.id), [products, selected]);
@@ -162,6 +165,7 @@ export default function AdminPage({
     !form.name.trim() && 'name',
     !form.series.trim() && 'series',
     !(form.price > 0) && 'price',
+    form.collection === CHIX_SLUG && !form.figureType && 'CHIX figure type',
   ].filter(Boolean) as string[];
 
   async function saveForm() {
@@ -515,6 +519,16 @@ export default function AdminPage({
                   ))}
                 </select>
                 <select
+                  value={figureFilter}
+                  onChange={(e) => setFigureFilter(e.target.value as typeof figureFilter)}
+                  style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}
+                  aria-label="Filter by CHIX figure type"
+                >
+                  <option value="all">CHIX type: any</option>
+                  <option value="prize">CHIX: Prize</option>
+                  <option value="scale">CHIX: Scale</option>
+                </select>
+                <select
                   value={featuredFilter}
                   onChange={(e) => setFeaturedFilter(e.target.value as typeof featuredFilter)}
                   style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}
@@ -639,7 +653,7 @@ export default function AdminPage({
 
                             {/* Category (main category + listing type) */}
                             <div className="min-w-0">
-                              <p style={{ color: '#C8C8D2', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="truncate">{collectionLabel(p.collection, categories)}</p>
+                              <p style={{ color: '#C8C8D2', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="truncate">{collectionLabel(p.collection, categories)}{p.figureType ? ` · ${p.figureType === 'prize' ? 'Prize' : 'Scale'}` : ''}</p>
                               <span
                                 style={{
                                   backgroundColor: cc.bg,
@@ -995,12 +1009,26 @@ export default function AdminPage({
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {collectionOptions.map((c) => (
-                      <LabelChip key={c.slug} active={form.collection === c.slug} onClick={() => set('collection', c.slug)}>
+                      <LabelChip key={c.slug} active={form.collection === c.slug} onClick={() => setForm((prev) => ({ ...prev, collection: c.slug, figureType: c.slug === CHIX_SLUG ? prev.figureType ?? null : null }))}>
                         {c.label}
                       </LabelChip>
                     ))}
                   </div>
                 </div>
+                {form.collection === CHIX_SLUG && (
+                  <div>
+                    <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
+                      Label: CHIX figure type * (shown on the CHIX "View all" page)
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {FIGURE_TYPES.map((t) => (
+                        <LabelChip key={t.value} active={form.figureType === t.value} onClick={() => set('figureType', t.value)}>
+                          {t.label}
+                        </LabelChip>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
                     Label: listing type *

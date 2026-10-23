@@ -7,8 +7,9 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
 import CartPage from './pages/CartPage';
+import ChixPage from './pages/ChixPage';
 import type { Product, CategoryInfo } from './data/products';
-import { FALLBACK_CATEGORIES } from './data/products';
+import { FALLBACK_CATEGORIES, CHIX_SLUG } from './data/products';
 
 type Route =
   | { type: 'home' }
@@ -16,6 +17,7 @@ type Route =
   | { type: 'search'; query: string; category?: string }
   | { type: 'category'; category: string }
   | { type: 'collection'; collection: string }
+  | { type: 'chix' }
   | { type: 'new-arrivals' }
   | { type: 'cart' };
 
@@ -46,6 +48,7 @@ export default function App() {
   function navigate(page: string) {
     if (page === 'home') setRoute({ type: 'home' });
     else if (page === 'cart') setRoute({ type: 'cart' });
+    else if (page === CHIX_SLUG) setRoute({ type: 'chix' });
     else if (page === 'new-arrivals') setRoute({ type: 'new-arrivals' });
     else if (navCategories.some((c) => c.slug === page)) setRoute({ type: 'collection', collection: page });
     else if (['on-hand', 'pre-order', 'new-release'].includes(page)) {
@@ -151,6 +154,15 @@ export default function App() {
             onAddToCart={addToCart}
             onSearch={handleSearch}
             products={products}
+          />
+        )}
+        {route.type === 'chix' && (
+          <ChixPage
+            products={products}
+            categories={navCategories}
+            onNavigate={navigate}
+            onView={viewProduct}
+            onAddToCart={addToCart}
           />
         )}
         {route.type === 'new-arrivals' && (

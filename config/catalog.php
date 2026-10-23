@@ -18,6 +18,10 @@ return [
 
     'default_collection' => 'anime-figures',
 
+    // The CHIX Figures collection is split into these types (Admin -> Products -> "CHIX figure type").
+    'chix_collection' => 'chix-figures',
+    'figure_types' => ['prize', 'scale'],
+
     // Card looks an admin can pick for each category (Admin -> Categories); the color is the category's `accent`.
     'category_styles' => ['classic', 'bold', 'glow'],
 

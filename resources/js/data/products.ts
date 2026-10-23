@@ -16,6 +16,16 @@ export type Condition = 'MISB' | 'MIB' | 'BIB' | 'LOOSE';
 
 export const CONDITIONS: Condition[] = ['MISB', 'MIB', 'BIB', 'LOOSE'];
 
+/** The CHIX Figures collection is split into prize figures and scale figures. */
+export type FigureType = 'prize' | 'scale';
+
+export const CHIX_SLUG = 'chix-figures';
+
+export const FIGURE_TYPES: { value: FigureType; label: string; blurb: string }[] = [
+  { value: 'prize', label: 'Prize Figures', blurb: 'Arcade and claw-machine prize figures: affordable, colourful, non-scale.' },
+  { value: 'scale', label: 'Scale Figures', blurb: 'Detailed display pieces in true collector scales like 1/7, 1/6 and 1/8.' },
+];
+
 export type CategoryStyle = 'classic' | 'bold' | 'glow';
 
 export const CATEGORY_STYLES: { value: CategoryStyle; label: string }[] = [
@@ -60,6 +70,8 @@ export interface Product {
   images: string[];
   category: Category;
   collection: Collection;
+  /** Only set for CHIX Figures: 'prize' or 'scale'. */
+  figureType?: FigureType | null;
   condition: Condition;
   inStock: boolean;
   isFeatured: boolean;
