@@ -9,6 +9,7 @@ import NewArrivals from '../components/NewArrivals';
 import NendoroidSection from '../components/NendoroidSection';
 import CategoryTiles from '../components/CategoryTiles';
 import type { CategoryInfo } from '../data/products';
+import { CHIX_SLUG } from '../data/products';
 
 interface HomePageProps {
   products: Product[];
@@ -19,18 +20,22 @@ interface HomePageProps {
 }
 
 const STRIP_ACCENTS = ['#FF2D78', '#A78BFA', '#F59E0B', '#22C55E', '#38BDF8'];
+/** How many anime the moving strip shows: the ones with the most products. */
+const STRIP_LENGTH = 10;
 
-/** One strip card per anime series, biggest series first; each opens that anime's page. */
+/** One strip card per anime series, the STRIP_LENGTH with the most products; each opens that anime's page. */
 function animeStrip(products: Product[]): StripItem[] {
   const bySeries = new Map<string, { count: number; image: string | null }>();
   for (const p of products) {
-    if (!p.series) continue;
+    // CHIX has its own product lines, so they are not anime series.
+    if (!p.series || p.collection === CHIX_SLUG) continue;
     const entry = bySeries.get(p.series) ?? { count: 0, image: p.images[0] ?? null };
     entry.count += 1;
     bySeries.set(p.series, entry);
   }
   return [...bySeries.entries()]
     .sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))
+    .slice(0, STRIP_LENGTH)
     .map(([series, entry], i) => ({
       key: series,
       label: series,
