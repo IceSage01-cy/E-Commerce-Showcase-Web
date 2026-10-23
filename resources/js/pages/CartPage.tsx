@@ -652,6 +652,12 @@ export default function CartPage({
             This info will appear on your order receipt.
           </p>
 
+          {/* Factual notice of what happens to these details; not a full privacy policy. */}
+          <p style={{ color: S.muted, fontFamily: 'Inter, sans-serif', fontSize: 12, marginTop: -16, marginBottom: 24 }}>
+            Your name, contact number, address and notes are used only to prepare this order request.
+            Nothing is saved on our server: the receipt is copied or saved on your device, and you send it to us yourself on Facebook.
+          </p>
+
           <div
             style={{
               backgroundColor: S.card,

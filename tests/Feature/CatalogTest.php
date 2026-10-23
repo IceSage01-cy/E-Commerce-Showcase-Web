@@ -155,7 +155,7 @@ class CatalogTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('collection');
 
         $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Scale one', 'collection' => 'scale-figures']))->assertCreated();
-        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix one', 'collection' => 'chix-figures']))->assertCreated();
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix one', 'collection' => 'chix-figures', 'figureType' => 'prize']))->assertCreated();
 
         $this->getJson('/api/products?collection=scale-figures')->assertOk()
             ->assertJsonCount(1)->assertJsonPath('0.name', 'Scale one')->assertJsonPath('0.collection', 'scale-figures');
@@ -243,8 +243,8 @@ class CatalogTest extends TestCase
         $this->assertDatabaseMissing('categories', ['slug' => 'empty-shelf']);
 
         // One that still has products asks where they should go...
-        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix A', 'collection' => 'chix-figures']))->assertCreated();
-        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix B', 'collection' => 'chix-figures']))->assertCreated();
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix A', 'collection' => 'chix-figures', 'figureType' => 'prize']))->assertCreated();
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix B', 'collection' => 'chix-figures', 'figureType' => 'prize']))->assertCreated();
         $chix = \App\Models\Category::where('slug', 'chix-figures')->firstOrFail();
 
         $this->admin()->deleteJson("/admin/api/categories/{$chix->id}")

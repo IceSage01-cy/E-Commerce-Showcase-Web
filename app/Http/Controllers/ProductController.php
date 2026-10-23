@@ -8,19 +8,26 @@ use App\Support\CatalogCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Only known values are accepted, so the cache key space stays bounded and
-        // arbitrary strings can't force a full table read per request.
-        $request->validate([
-            'category' => ['nullable', 'string', Rule::in(['on-hand', 'pre-order', 'new-release'])],
-            'collection' => ['nullable', 'string', Rule::in(Category::pluck('slug')->all())],
-            'q' => ['nullable', 'string', 'max:100'],
-        ]);
+        $request->validate(['q' => ['nullable', 'string', 'max:100']]);
+
+        // An unknown category or collection (e.g. a deleted one, from an old link) gets an empty list,
+        // not an error. Only known values reach the cache, so arbitrary strings can't fill it.
+        $knownCategories = ['on-hand', 'pre-order', 'new-release'];
+        $knownCollections = Category::pluck('slug')->all();
+        $category = (string) $request->input('category', '');
+        $collection = (string) $request->input('collection', '');
+
+        if (
+            ($category !== '' && ! in_array($category, $knownCategories, true))
+            || ($collection !== '' && ! in_array($collection, $knownCollections, true))
+        ) {
+            return response('[]', 200, ['Content-Type' => 'application/json']);
+        }
 
         $query = Product::query();
 

@@ -16,14 +16,19 @@ Route::get('/', function () {
 });
 
 // Public, read-only — used by the homepage HeroSlider and storefront.
-Route::get('/api/banners', [BannerController::class, 'index'])->name('banners.index');
-Route::get('/api/categories', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('/api/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/api/products/{product}', [ProductController::class, 'show'])->name('products.show');
+// Throttled per IP so the catalogue can't be hammered (each uncached list read is a database query).
+Route::middleware('throttle:120,1')->group(function () {
+    Route::get('/api/banners', [BannerController::class, 'index'])->name('banners.index');
+    Route::get('/api/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/api/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/api/products/{product}', [ProductController::class, 'show'])->name('products.show');
+});
 
 // Used by the receipt "Download as Image" button to fetch R2 images
 // same-origin so the browser doesn't taint the canvas.
-Route::get('/api/image-proxy', [ImageProxyController::class, 'show'])->name('image-proxy');
+Route::get('/api/image-proxy', [ImageProxyController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('image-proxy');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');

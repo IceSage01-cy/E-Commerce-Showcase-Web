@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import axios from 'axios';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -6,7 +6,8 @@ import HomePage from './pages/HomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
-import CartPage from './pages/CartPage';
+// Loaded on demand: the cart page pulls in the receipt image library, which the rest of the shop doesn't need.
+const CartPage = lazy(() => import('./pages/CartPage'));
 import ChixPage from './pages/ChixPage';
 import NendoroidsPage from './pages/NendoroidsPage';
 import AnimeBrowser from './components/AnimeBrowser';
@@ -214,13 +215,15 @@ export default function App() {
           </div>
         )}
         {route.type === 'cart' && (
-          <CartPage
-            cart={cart}
-            products={products}
-            onNavigate={navigate}
-            onRemoveFromCart={removeFromCart}
-            onClearCart={clearCart}
-          />
+          <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-20" />}>
+            <CartPage
+              cart={cart}
+              products={products}
+              onNavigate={navigate}
+              onRemoveFromCart={removeFromCart}
+              onClearCart={clearCart}
+            />
+          </Suspense>
         )}
       </main>
 
