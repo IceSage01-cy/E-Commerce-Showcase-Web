@@ -69,7 +69,7 @@ export default function Header({ categories, onSearch, onNavigate, cartCount }: 
               key={item.action}
               onClick={() => onNavigate(item.action)}
               style={{ color: '#80808C', fontFamily: 'Inter, sans-serif' }}
-              className="px-2.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap hover:text-[#F0F0F4] hover:bg-[#141418]"
+              className="px-2.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap hover:text-white hover:bg-[#FF2D78]"
             >
               {item.label}
             </button>
