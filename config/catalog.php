@@ -22,6 +22,9 @@ return [
     'chix_collection' => 'chix-figures',
     'figure_types' => ['prize', 'scale'],
 
+    // Scale Figures are already scale products, so they never get a Prize / Scale type.
+    'scale_collection' => 'scale-figures',
+
     // Card looks an admin can pick for each category (Admin -> Categories); the color is the category's `accent`.
     'category_styles' => ['classic', 'bold', 'glow'],
 

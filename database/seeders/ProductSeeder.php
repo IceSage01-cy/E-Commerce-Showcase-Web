@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Product;
+use App\Support\CatalogCache;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
@@ -506,47 +507,6 @@ class ProductSeeder extends Seeder
                 'scale' => '1/6',
                 'estimated_arrival' => 'April 2027',
             ],
-            [
-                'name' => 'Hatsune Miku Mini Prize Figure',
-                'series' => 'Vocaloid',
-                'character' => 'Hatsune Miku',
-                'price' => 900,
-                'images' => [
-                    'https://images.unsplash.com/photo-1767700629009-c5b5dc7b5947?w=800&h=800&fit=crop&auto=format',
-                    'https://images.unsplash.com/photo-1770288784491-38537cc095b0?w=800&h=800&fit=crop&auto=format',
-                ],
-                'category' => 'on-hand',
-                'condition' => 'LOOSE',
-                'collection' => 'scale-figures',
-                'figure_type' => 'prize',
-                'in_stock' => true,
-                'is_featured' => false,
-                'date_added' => '2026-10-14',
-                'description' => 'A mini prize figure of Miku in a chibi pose. Loose and in good condition.',
-                'manufacturer' => 'Various (Prize line)',
-                'scale' => 'Non-scale',
-            ],
-            [
-                'name' => 'Rem Battle Maid 1/7 Scale Figure',
-                'series' => 'Re:Zero',
-                'character' => 'Rem',
-                'price' => 5200,
-                'images' => [
-                    'https://images.unsplash.com/photo-1770288784592-a93a96be0bb2?w=800&h=800&fit=crop&auto=format',
-                    'https://images.unsplash.com/photo-1762376622511-0c1d97912bf5?w=800&h=800&fit=crop&auto=format',
-                ],
-                'category' => 'pre-order',
-                'condition' => 'MISB',
-                'collection' => 'scale-figures',
-                'figure_type' => 'scale',
-                'in_stock' => true,
-                'is_featured' => false,
-                'date_added' => '2026-10-19',
-                'description' => 'Rem in her battle maid outfit with the flail. A 1/7 scale display piece, sealed.',
-                'manufacturer' => 'Good Smile Company',
-                'scale' => '1/7',
-                'estimated_arrival' => 'March 2027',
-            ],
         ];
 
         // Idempotent: a product is identified by name + series + condition. Re-running the
@@ -562,5 +522,10 @@ class ProductSeeder extends Seeder
                 $product,
             );
         }
+
+        // Scale Figures are scale products already, so they never carry a Prize / Scale type.
+        // Clear it on rows seeded before this rule existed.
+        Product::where('collection', config('catalog.scale_collection'))->update(['figure_type' => null]);
+        CatalogCache::bump();
     }
 }

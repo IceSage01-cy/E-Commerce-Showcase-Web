@@ -66,7 +66,7 @@ class ProductController extends Controller
             'images' => array_values(array_filter($data['images'] ?? [])),
             'category' => $data['category'],
             'collection' => $data['collection'],
-            'figure_type' => $data['figureType'] ?? null,
+            'figure_type' => $data['collection'] === config('catalog.scale_collection') ? null : ($data['figureType'] ?? null),
             'condition' => $data['condition'],
             'in_stock' => $data['inStock'],
             'is_featured' => $data['isFeatured'] ?? false,

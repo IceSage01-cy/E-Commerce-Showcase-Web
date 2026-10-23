@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Product, Category, CategoryInfo, FigureType } from '../data/products';
-import { FALLBACK_CATEGORIES } from '../data/products';
+import { FALLBACK_CATEGORIES, SCALE_SLUG } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { usePaged, ShowMoreButton } from '../components/ShowMore';
 import AnimeBrowser, { type BrowseSplit } from '../components/AnimeBrowser';
@@ -55,7 +55,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
     if (figureTypeFilter === 'prize') {
       list = list.filter((p) => p.figureType === 'prize');
     } else if (figureTypeFilter === 'scale') {
-      list = list.filter((p) => p.figureType === 'scale' || p.collection === 'scale-figures');
+      list = list.filter((p) => p.figureType === 'scale' || p.collection === SCALE_SLUG);
     }
 
     // Text search. With no typed query, we skip this entirely and hand the

@@ -21,6 +21,9 @@ export type FigureType = 'prize' | 'scale';
 
 export const CHIX_SLUG = 'chix-figures';
 
+/** Scale Figures never carry a Prize / Scale type. */
+export const SCALE_SLUG = 'scale-figures';
+
 export const FIGURE_TYPES: { value: FigureType; label: string; blurb: string }[] = [
   { value: 'prize', label: 'Prize Figures', blurb: 'Arcade and claw-machine prize figures: affordable, colourful, non-scale.' },
   { value: 'scale', label: 'Scale Figures', blurb: 'Detailed display pieces in true collector scales like 1/7, 1/6 and 1/8.' },

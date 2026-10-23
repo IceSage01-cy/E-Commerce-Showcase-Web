@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import type { Product, Category, Condition, Collection, CategoryInfo, BulkAction } from '../data/products';
-import { getStockStyle, formatPrice, CONDITIONS, collectionLabel, normalizeCondition, CHIX_SLUG, FIGURE_TYPES } from '../data/products';
+import { getStockStyle, formatPrice, CONDITIONS, collectionLabel, normalizeCondition, CHIX_SLUG, SCALE_SLUG, FIGURE_TYPES } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
 import CategoriesTab, { type CategoryFormData } from '../components/CategoriesTab';
 import ImageDropzone from '../components/ImageDropzone';
@@ -1009,28 +1009,30 @@ export default function AdminPage({
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {collectionOptions.map((c) => (
-                      <LabelChip key={c.slug} active={form.collection === c.slug} onClick={() => setForm((prev) => ({ ...prev, collection: c.slug }))}>
+                      <LabelChip key={c.slug} active={form.collection === c.slug} onClick={() => setForm((prev) => ({ ...prev, collection: c.slug, figureType: c.slug === SCALE_SLUG ? null : prev.figureType }))}>
                         {c.label}
                       </LabelChip>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
-                    Label: Prize / Scale {form.collection === CHIX_SLUG ? '* (required for CHIX)' : '(optional, click again to clear)'}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {FIGURE_TYPES.map((t) => (
-                      <LabelChip
-                        key={t.value}
-                        active={form.figureType === t.value}
-                        onClick={() => set('figureType', form.figureType === t.value ? null : t.value)}
-                      >
-                        {t.label}
-                      </LabelChip>
-                    ))}
+                {form.collection !== SCALE_SLUG && (
+                  <div>
+                    <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
+                      Label: Prize / Scale {form.collection === CHIX_SLUG ? '* (required for CHIX)' : '(optional, click again to clear)'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {FIGURE_TYPES.map((t) => (
+                        <LabelChip
+                          key={t.value}
+                          active={form.figureType === t.value}
+                          onClick={() => set('figureType', form.figureType === t.value ? null : t.value)}
+                        >
+                          {t.label}
+                        </LabelChip>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div>
                   <p style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11, marginBottom: 6 }} className="uppercase tracking-wider font-500">
                     Label: listing type *

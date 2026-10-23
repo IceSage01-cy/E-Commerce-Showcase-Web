@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 
 import type { CategoryInfo } from '../data/products';
+import { CHIX_SLUG } from '../data/products';
 
 const PRIMARY_PINK = '#FF2D78';
 
@@ -23,9 +24,9 @@ interface HeaderProps {
 export default function Header({ categories, onSearch, onNavigate, cartCount, current = null }: HeaderProps) {
   const NAV_ITEMS = [...categories.map((c) => ({ label: c.label, action: c.slug })), ...EXTRA_NAV_ITEMS];
 
-  /** Hover / current colours for a nav item: the category's accent, or the shop pink for other items. */
+  /** Colour of the current nav item: CHIX Figures keeps its green, every other item is pink. */
   function navColors(action: string): Record<string, string> {
-    const accent = categories.find((c) => c.slug === action)?.accent ?? PRIMARY_PINK;
+    const accent = action === CHIX_SLUG ? (categories.find((c) => c.slug === action)?.accent ?? PRIMARY_PINK) : PRIMARY_PINK;
     // Light text on pink, dark text on the bright green CHIX accent so it stays readable.
     const text = accent.toUpperCase() === '#22C55E' ? '#04140A' : '#FFFFFF';
     return { '--nav-accent': accent, '--nav-text': text };
@@ -87,7 +88,7 @@ export default function Header({ categories, onSearch, onNavigate, cartCount, cu
                 backgroundColor: item.action === current ? navColors(item.action)['--nav-accent'] : undefined,
                 fontFamily: 'Inter, sans-serif',
               } as CSSProperties}
-              className="px-2.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap hover:text-[var(--nav-text)] hover:bg-[var(--nav-accent)]"
+              className="px-2.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap"
             >
               {item.label}
             </button>
