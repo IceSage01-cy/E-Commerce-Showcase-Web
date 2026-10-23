@@ -7,9 +7,12 @@ import FeaturedProducts from '../components/FeaturedProducts';
 import ChixFiguresSection from '../components/ChixFiguresSection';
 import NewArrivals from '../components/NewArrivals';
 import NendoroidSection from '../components/NendoroidSection';
+import CategoryTiles from '../components/CategoryTiles';
+import type { CategoryInfo } from '../data/products';
 
 interface HomePageProps {
   products: Product[];
+  categories: CategoryInfo[];
   onView: (id: string) => void;
   onNavigate: (page: string) => void;
   onAddToCart: (id: string) => void;
@@ -36,7 +39,7 @@ function animeStrip(products: Product[]): StripItem[] {
     }));
 }
 
-export default function HomePage({ products, onView, onNavigate, onAddToCart }: HomePageProps) {
+export default function HomePage({ products, categories, onView, onNavigate, onAddToCart }: HomePageProps) {
   const strip = useMemo(() => animeStrip(products), [products]);
 
   return (
@@ -44,6 +47,7 @@ export default function HomePage({ products, onView, onNavigate, onAddToCart }: 
       <HeroSlider onNavigate={onNavigate} />
       <CategoryMarquee items={strip} onSelect={onNavigate} />
       <FeaturedProducts products={products} onView={onView} onAddToCart={onAddToCart} />
+      <CategoryTiles categories={categories} onNavigate={onNavigate} />
       <ChixFiguresSection products={products} onView={onView} onNavigate={onNavigate} />
       <NewArrivals products={products} onView={onView} onAddToCart={onAddToCart} />
       <NendoroidSection products={products} onView={onView} onAddToCart={onAddToCart} onNavigate={onNavigate} />

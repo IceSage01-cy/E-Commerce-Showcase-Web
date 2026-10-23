@@ -129,7 +129,7 @@ export default function App() {
             Setting the table…
           </div>
         ) : route.type === 'home' && (
-          <HomePage products={products} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
+          <HomePage products={products} categories={navCategories} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
         )}
         {route.type === 'product' && (
           <ProductDetailPage
@@ -185,7 +185,7 @@ export default function App() {
           />
         )}
         {route.type === 'nendoroids' && (
-          <NendoroidsPage products={products} onView={viewProduct} onAddToCart={addToCart} onNavigate={navigate} />
+          <NendoroidsPage products={products} onView={viewProduct} onAddToCart={addToCart} />
         )}
         {route.type === 'anime' && (
           <div className="max-w-7xl mx-auto px-4 py-8">
