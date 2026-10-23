@@ -363,7 +363,7 @@ export default function CartPage({
                         color: active ? S.primary : S.faint,
                         fontFamily: 'Outfit, sans-serif',
                         fontSize: 11,
-                        fontWeight: 800,
+                        fontWeight: 600,
                       }}
                     >
                       {i + 1}
@@ -405,7 +405,7 @@ export default function CartPage({
               fontFamily: 'Outfit, sans-serif',
               color: S.text,
               fontSize: 40,
-              fontWeight: 900,
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '-0.01em',
               lineHeight: 0.95,
@@ -577,7 +577,7 @@ export default function CartPage({
                 color: S.text,
                 fontFamily: 'Outfit, sans-serif',
                 fontSize: 24,
-                fontWeight: 800,
+                fontWeight: 600,
               }}
             >
               {formatPrice(total)}
@@ -632,7 +632,7 @@ export default function CartPage({
               fontFamily: 'Outfit, sans-serif',
               color: S.text,
               fontSize: 40,
-              fontWeight: 900,
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '-0.01em',
               lineHeight: 0.95,
@@ -771,7 +771,7 @@ export default function CartPage({
               fontFamily: 'Outfit, sans-serif',
               color: S.text,
               fontSize: 40,
-              fontWeight: 900,
+              fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '-0.01em',
               lineHeight: 0.95,
@@ -830,7 +830,7 @@ export default function CartPage({
                   color: S.primary,
                   fontFamily: 'Outfit, sans-serif',
                   fontSize: 11,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   letterSpacing: '0.2em',
                   textTransform: 'uppercase',
                   marginBottom: 4,
@@ -843,7 +843,7 @@ export default function CartPage({
                   color: S.text,
                   fontFamily: 'Outfit, sans-serif',
                   fontSize: 18,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   marginBottom: 2,
                 }}
               >
@@ -883,7 +883,7 @@ export default function CartPage({
                     color: S.text,
                     fontFamily: 'Outfit, sans-serif',
                     fontSize: 14,
-                    fontWeight: 800,
+                    fontWeight: 600,
                   }}
                 >
                   {receiptNo}
@@ -917,7 +917,7 @@ export default function CartPage({
                   color: S.primary,
                   fontFamily: 'Outfit, sans-serif',
                   fontSize: 10,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   textTransform: 'uppercase',
                   letterSpacing: '0.12em',
                   marginBottom: 12,
@@ -1031,7 +1031,7 @@ export default function CartPage({
                   color: S.primary,
                   fontFamily: 'Outfit, sans-serif',
                   fontSize: 10,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   textTransform: 'uppercase',
                   letterSpacing: '0.12em',
                   marginBottom: 12,
@@ -1125,7 +1125,7 @@ export default function CartPage({
                   color: S.primary,
                   fontFamily: 'Outfit, sans-serif',
                   fontSize: 26,
-                  fontWeight: 800,
+                  fontWeight: 600,
                 }}
               >
                 {formatPrice(total)}

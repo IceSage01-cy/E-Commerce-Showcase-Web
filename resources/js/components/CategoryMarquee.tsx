@@ -125,7 +125,7 @@ function HexCard({ cat, onClick, duplicate }: { cat: CategoryInfo; onClick: () =
                 lineHeight: 1.1,
               }}
             >
-              <span className="block text-[1.05rem] font-black uppercase tracking-wide">{cat.label}</span>
+              <span className="block text-[1.05rem] font-semibold uppercase tracking-wide">{cat.label}</span>
             </span>
             <span className="hex-bar block h-[3px] rounded-full" style={{ background: cat.accent }} />
             <span

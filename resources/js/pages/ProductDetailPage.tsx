@@ -189,7 +189,7 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
               </p>
               <h1
                 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 1 }}
-                className="text-3xl sm:text-5xl font-black uppercase tracking-tight"
+                className="text-3xl sm:text-5xl font-bold uppercase tracking-tight"
               >
                 {product.name}
               </h1>
@@ -202,7 +202,7 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
                   color: product.salePrice ? '#FF2D78' : '#F0F0F4',
                   fontFamily: 'Outfit, sans-serif',
                 }}
-                className="text-4xl font-black"
+                className="text-4xl font-semibold"
               >
                 {formatPrice(product.salePrice ?? product.price)}
               </span>
@@ -338,7 +338,7 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
             <div style={{ borderTop: '1px solid #1A1A20' }} className="pt-10">
               <h2
                 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }}
-                className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-6"
+                className="text-3xl sm:text-4xl font-semibold uppercase tracking-tight mb-6"
               >
                 You Might Also Like
               </h2>

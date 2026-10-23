@@ -114,7 +114,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
 
             <h1
               style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.92 }}
-              className="text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight mb-4"
+              className="text-5xl sm:text-6xl md:text-7xl font-bold uppercase tracking-tight mb-4"
             >
               {slide.title}
             </h1>

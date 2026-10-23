@@ -148,7 +148,7 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
               fontSize: size === 'lg' ? 17 : 14,
               lineHeight: 1.15,
             }}
-            className="font-black uppercase tracking-tight line-clamp-2"
+            className="font-semibold uppercase tracking-tight line-clamp-2"
           >
             {product.name}
           </h3>
@@ -187,7 +187,7 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
               fontFamily: 'Outfit, sans-serif',
               fontSize: size === 'lg' ? 17 : 15,
             }}
-            className="font-black"
+            className="font-semibold"
           >
             {formatPrice(product.salePrice ?? product.price)}
           </span>

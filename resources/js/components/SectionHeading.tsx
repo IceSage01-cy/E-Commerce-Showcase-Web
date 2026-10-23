@@ -26,7 +26,7 @@ export default function SectionHeading({ index, kicker, title, accent, action }:
           )}
           <h2
             style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }}
-            className="text-4xl sm:text-6xl font-black uppercase tracking-tight"
+            className="text-4xl sm:text-6xl font-bold uppercase tracking-tight"
           >
             {title}
           </h2>
