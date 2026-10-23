@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Product } from '../data/products';
 import { CHIX_SLUG, FIGURE_TYPES, formatPrice, getStockStyle } from '../data/products';
+import SectionHeading from './SectionHeading';
 
 interface ChixFiguresSectionProps {
   products: Product[];
