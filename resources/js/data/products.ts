@@ -19,17 +19,6 @@ export const CONDITIONS: Condition[] = ['MISB', 'MIB', 'BIB', 'LOOSE'];
 /** The CHIX Figures collection is split into prize figures and scale figures. */
 export type FigureType = 'prize' | 'scale';
 
-/** Sort orders offered on the search page and in the nav dropdown. */
-export type BrowseSort = 'relevance' | 'newest' | 'price-asc' | 'price-desc';
-
-/** A filter picked in the nav dropdown; 'all' means no filter on that field. */
-export interface BrowseFilter {
-  collection: string;
-  category: string;
-  figureType: FigureType | 'all';
-  sort: BrowseSort;
-}
-
 export const CHIX_SLUG = 'chix-figures';
 
 export const FIGURE_TYPES: { value: FigureType; label: string; blurb: string }[] = [

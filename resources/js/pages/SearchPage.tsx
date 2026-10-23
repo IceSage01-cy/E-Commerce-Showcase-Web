@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { Product, Category, CategoryInfo, FigureType, BrowseSort } from '../data/products';
+import type { Product, Category, CategoryInfo, FigureType } from '../data/products';
 import { FALLBACK_CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { usePaged, ShowMoreButton } from '../components/ShowMore';
@@ -13,8 +13,6 @@ interface SearchPageProps {
   initialCategory?: string;
   /** Main category (Anime Figures, Scale Figures, ...) to start filtered on. */
   initialCollection?: string;
-  initialFigureType?: FigureType | 'all';
-  initialSort?: BrowseSort;
   categories?: CategoryInfo[];
   onView: (id: string) => void;
   onAddToCart: (id: string) => void;
@@ -24,9 +22,9 @@ interface SearchPageProps {
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 
-export default function SearchPage({ initialQuery, initialCategory, initialCollection, initialFigureType = 'all', initialSort = 'relevance', categories = FALLBACK_CATEGORIES, onView, onAddToCart, onSearch, products }: SearchPageProps) {
+export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = FALLBACK_CATEGORIES, onView, onAddToCart, onSearch, products }: SearchPageProps) {
   const [query, setQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState<SortOption>(initialSort);
+  const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
     (initialCategory as Category) || 'all'
   );
@@ -34,7 +32,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
   // (declared below, after `results`)
   const [collectionFilter, setCollectionFilter] = useState<string>(initialCollection || 'all');
   // Prize / Scale split for CHIX Figures.
-  const [figureTypeFilter, setFigureTypeFilter] = useState<FigureType | 'all'>(initialFigureType);
+  const [figureTypeFilter, setFigureTypeFilter] = useState<FigureType | 'all'>('all');
 
   const results = useMemo(() => {
     let list = [...products];
@@ -53,8 +51,11 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
     }
 
     // Prize / Scale filter (CHIX Figures only)
-    if (figureTypeFilter !== 'all') {
-      list = list.filter((p) => p.figureType === figureTypeFilter);
+    // Prize = CHIX prize figures. Scale = CHIX scale figures and the Scale Figures collection.
+    if (figureTypeFilter === 'prize') {
+      list = list.filter((p) => p.figureType === 'prize');
+    } else if (figureTypeFilter === 'scale') {
+      list = list.filter((p) => p.figureType === 'scale' || p.collection === 'scale-figures');
     }
 
     // Text search. With no typed query, we skip this entirely and hand the
@@ -157,31 +158,18 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
             </h1>
           )}
 
-          {/* Main category pills */}
-          <div className="flex gap-1 flex-wrap mb-3">
-            {[{ slug: 'all', label: 'All Categories' }, ...categories].map((c) => (
-              <Pill
-                key={c.slug}
-                label={c.label}
-                active={collectionFilter === c.slug}
-                onClick={() => setCollectionFilter(c.slug)}
-              />
-            ))}
-          </div>
-
-
-          {/* Filters row */}
+          {/* Filters row: availability and figure type, plus sort */}
           <div className="flex flex-wrap gap-2 items-center">
-            {/* Category */}
             <div className="flex gap-1 flex-wrap">
-              {(['all', 'on-hand', 'pre-order'] as const).map((c) => (
-                <Pill
-                  key={c}
-                  label={c === 'all' ? 'All' : c === 'on-hand' ? 'On Hand' : 'Pre-Order'}
-                  active={categoryFilter === c}
-                  onClick={() => setCategoryFilter(c)}
-                />
-              ))}
+              <Pill
+                label="All"
+                active={categoryFilter === 'all' && figureTypeFilter === 'all'}
+                onClick={() => { setCategoryFilter('all'); setFigureTypeFilter('all'); }}
+              />
+              <Pill label="On Hand" active={categoryFilter === 'on-hand'} onClick={() => setCategoryFilter('on-hand')} />
+              <Pill label="Pre-Order" active={categoryFilter === 'pre-order'} onClick={() => setCategoryFilter('pre-order')} />
+              <Pill label="Prize" active={figureTypeFilter === 'prize'} onClick={() => setFigureTypeFilter('prize')} />
+              <Pill label="Scale" active={figureTypeFilter === 'scale'} onClick={() => setFigureTypeFilter('scale')} />
             </div>
 
             <div style={{ backgroundColor: '#222228', width: 1, height: 20 }} className="mx-1 hidden sm:block" />
