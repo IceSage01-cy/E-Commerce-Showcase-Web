@@ -10,6 +10,7 @@ import ProductCard from './components/ProductCard';
 const CartPage = lazy(() => import('./pages/CartPage'));
 import ChixPage from './pages/ChixPage';
 import NendoroidsPage from './pages/NendoroidsPage';
+import JapanNewArrivalsPage from './pages/JapanNewArrivalsPage';
 import AnimeBrowser from './components/AnimeBrowser';
 import SectionHeading from './components/SectionHeading';
 import type { Product, CategoryInfo } from './data/products';
@@ -25,6 +26,7 @@ type Route =
   | { type: 'nendoroids' }
   | { type: 'anime'; series: string }
   | { type: 'new-arrivals' }
+  | { type: 'japan-new-arrivals' }
   | { type: 'cart' };
 
 export default function App() {
@@ -59,6 +61,7 @@ export default function App() {
     else if (page === 'cart') setRoute({ type: 'cart' });
     else if (page === CHIX_SLUG) setRoute({ type: 'chix' });
     else if (page === 'new-arrivals') setRoute({ type: 'new-arrivals' });
+    else if (page === 'japan-new-arrivals') setRoute({ type: 'japan-new-arrivals' });
     else if (page === 'nendoroids') setRoute({ type: 'nendoroids' });
     else if (products.some((p) => p.series === page)) setRoute({ type: 'anime', series: page });
     else if (navCategories.some((c) => c.slug === page)) setRoute({ type: 'collection', collection: page });
@@ -106,8 +109,11 @@ export default function App() {
     [categories],
   );
 
+  // Pinas On Hand: the products we hold locally, newest first.
   const sortedNew = useMemo(
-    () => [...products].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
+    () => products
+      .filter((p) => p.category === 'on-hand')
+      .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
     [products],
   );
 
@@ -151,7 +157,6 @@ export default function App() {
             categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}
-            onSearch={handleSearch}
             products={products}
           />
         )}
@@ -163,7 +168,6 @@ export default function App() {
             categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}
-            onSearch={handleSearch}
             products={products}
           />
         )}
@@ -175,7 +179,6 @@ export default function App() {
             categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}
-            onSearch={handleSearch}
             products={products}
           />
         )}
@@ -221,11 +224,14 @@ export default function App() {
             />
           </div>
         )}
+        {route.type === 'japan-new-arrivals' && (
+          <JapanNewArrivalsPage products={products} covers={animeCovers} onView={viewProduct} onAddToCart={addToCart} />
+        )}
         {route.type === 'new-arrivals' && (
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="mb-8">
-              <p style={{ color: '#22C55E', fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">Just Added</p>
-              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-5xl sm:text-6xl font-bold uppercase tracking-tight">New Arrivals</h1>
+              <p style={{ color: '#22C55E', fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">Local stock</p>
+              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-5xl sm:text-6xl font-bold uppercase tracking-tight">Pinas On Hand</h1>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
               {sortedNew.map((p) => (

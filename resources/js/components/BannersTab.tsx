@@ -27,7 +27,7 @@ interface BannersTabProps {
 
 /** Fixed pages a banner button can open; the shop's categories are added after these. */
 const PAGE_ACTIONS = [
-  { value: 'new-arrivals', label: 'New Arrivals' },
+  { value: 'new-arrivals', label: 'Pinas On Hand' },
   { value: 'on-hand', label: 'On Hand' },
   { value: 'pre-order', label: 'Pre-Order' },
   { value: 'home', label: 'Home' },

@@ -6,9 +6,10 @@ interface FeaturedProductsProps {
   products: Product[];
   onView: (id: string) => void;
   onAddToCart: (id: string) => void;
+  onNavigate: (page: string) => void;
 }
 
-export default function FeaturedProducts({ products = [], onView, onAddToCart }: FeaturedProductsProps) {
+export default function FeaturedProducts({ products = [], onView, onAddToCart, onNavigate }: FeaturedProductsProps) {
   const featured = products.filter((p) => p.isFeatured).slice(0, 6);
 
   return (
@@ -18,6 +19,18 @@ export default function FeaturedProducts({ products = [], onView, onAddToCart }:
           kicker="Fresh From Japan"
           title="Japan New Arrivals"
           accent="#FF2D78"
+          action={
+            <button
+              onClick={() => onNavigate('japan-new-arrivals')}
+              style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif' }}
+              className="hidden sm:flex items-center gap-2 text-sm font-semibold uppercase tracking-wider hover:text-[#FF2D78] transition-colors"
+            >
+              View all
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          }
         />
 
         {/* Grid — first card is large, rest are standard */}

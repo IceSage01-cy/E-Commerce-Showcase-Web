@@ -12,7 +12,9 @@ interface NewArrivalsProps {
 export default function NewArrivals({ products = [], onView, onAddToCart }: NewArrivalsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const sorted = [...products]
+  // Pinas On Hand: the products we hold locally, newest first.
+  const sorted = products
+    .filter((p) => p.category === 'on-hand')
     .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
     .slice(0, 8);
 
@@ -25,8 +27,8 @@ export default function NewArrivals({ products = [], onView, onAddToCart }: NewA
     <section className="py-16 px-4">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          kicker="Just Added"
-          title="New Arrivals"
+          kicker="Local stock"
+          title="Pinas On Hand"
           accent="#22C55E"
           action={
             <div className="flex items-center gap-2">

@@ -16,13 +16,12 @@ interface SearchPageProps {
   categories?: CategoryInfo[];
   onView: (id: string) => void;
   onAddToCart: (id: string) => void;
-  onSearch: (q: string) => void;
   products: Product[];
 }
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 
-export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = FALLBACK_CATEGORIES, onView, onAddToCart, onSearch, products }: SearchPageProps) {
+export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = FALLBACK_CATEGORIES, onView, onAddToCart, products }: SearchPageProps) {
   const [query, setQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
@@ -79,11 +78,6 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
   }, [query, sortBy, categoryFilter, collectionFilter, figureTypeFilter, products]);
   const paged = usePaged(results);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (query.trim()) onSearch(query.trim());
-  }
-
   const pillBase = {
     borderRadius: 9999,
     fontFamily: 'Outfit, sans-serif',
@@ -120,38 +114,6 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
         className="px-4 py-6"
       >
         <div className="max-w-7xl mx-auto">
-          <form onSubmit={handleSearch} className="flex gap-3 mb-5">
-            <div className="flex-1 relative">
-              <svg
-                width="16" height="16" viewBox="0 0 16 16" fill="none"
-                style={{ color: '#50505C' }}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-              >
-                <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.25" />
-                <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-              </svg>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search figures, series, characters…"
-                style={{
-                  backgroundColor: '#141418',
-                  border: '1px solid #222228',
-                  color: '#F0F0F4',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-                className="w-full h-11 pl-10 pr-4 rounded-full text-sm outline-none focus:border-[#FF2D78] transition-colors placeholder:text-[#50505C]"
-              />
-            </div>
-            <button
-              type="submit"
-              style={{ background: '#FF2D78', fontFamily: 'Outfit, sans-serif' }}
-              className="px-6 rounded-full text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0"
-            >
-              Search
-            </button>
-          </form>
-
           {collectionFilter !== 'all' && (
             <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-4xl sm:text-5xl font-bold uppercase tracking-tight mb-4">
               {categories.find((c) => c.slug === collectionFilter)?.label ?? 'Shop'}

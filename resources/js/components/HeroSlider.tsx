@@ -108,7 +108,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
                   style={{ backgroundColor: slide.accent }}
                   className="w-1.5 h-1.5 rounded-full"
                 />
-                {current === 0 ? 'New Arrivals' : current === 1 ? 'Pre-Order' : 'Collection'}
+                {current === 0 ? 'Pinas On Hand' : current === 1 ? 'Pre-Order' : 'Collection'}
               </span>
             </div>
 
