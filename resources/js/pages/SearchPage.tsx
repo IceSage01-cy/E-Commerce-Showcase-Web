@@ -3,7 +3,10 @@ import type { Product, Category, CategoryInfo } from '../data/products';
 import { FALLBACK_CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { usePaged, ShowMoreButton } from '../components/ShowMore';
-import AnimeBrowser from '../components/AnimeBrowser';
+import AnimeBrowser, { type BrowseSplit } from '../components/AnimeBrowser';
+
+// Scale Figures are split by scale (1/6, 1/7, ...) before the anime drill-down.
+const SCALE_SPLIT: BrowseSplit = { key: 'scale', labelOf: (value) => value };
 
 interface SearchPageProps {
   initialQuery: string;
@@ -216,6 +219,8 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
             products={results}
             onView={onView}
             onAddToCart={onAddToCart}
+            split={collectionFilter === 'scale-figures' ? SCALE_SPLIT : undefined}
+            rootLabel={`All ${categories.find((c) => c.slug === collectionFilter)?.label ?? 'Figures'}`}
           />
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">

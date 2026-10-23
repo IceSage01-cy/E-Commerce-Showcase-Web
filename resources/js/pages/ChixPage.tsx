@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Product, CategoryInfo, FigureType } from '../data/products';
 import { CHIX_SLUG, FIGURE_TYPES } from '../data/products';
-import ProductCard from '../components/ProductCard';
-import { usePaged, ShowMoreButton } from '../components/ShowMore';
+import AnimeBrowser from '../components/AnimeBrowser';
 
 interface ChixPageProps {
   products: Product[];
@@ -12,27 +11,17 @@ interface ChixPageProps {
   onAddToCart: (id: string) => void;
 }
 
-type SortOption = 'newest' | 'price-asc' | 'price-desc';
-
 const ACCENT = '#22C55E';
 
 /** CHIX "View all": first pick Prize or Scale figures, then see those products. */
 export default function ChixPage({ products, categories, onNavigate, onView, onAddToCart }: ChixPageProps) {
   const [type, setType] = useState<FigureType | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   const chix = useMemo(() => products.filter((p) => p.collection === CHIX_SLUG), [products]);
   const accent = categories.find((c) => c.slug === CHIX_SLUG)?.accent ?? ACCENT;
   const title = categories.find((c) => c.slug === CHIX_SLUG)?.label ?? 'CHIX Figures';
 
-  const results = useMemo(() => {
-    const list = chix.filter((p) => p.figureType === type);
-    if (sortBy === 'price-asc') list.sort((a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price));
-    else if (sortBy === 'price-desc') list.sort((a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price));
-    else list.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
-    return list;
-  }, [chix, type, sortBy]);
-  const paged = usePaged(results);
+  const results = useMemo(() => chix.filter((p) => p.figureType === type), [chix, type]);
 
   const active = FIGURE_TYPES.find((t) => t.value === type);
 
@@ -94,16 +83,6 @@ export default function ChixPage({ products, categories, onNavigate, onView, onA
                   {t.label}
                 </button>
               ))}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                aria-label="Sort"
-                style={{ backgroundColor: '#141418', border: '1px solid #222228', color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 12, borderRadius: 9999, padding: '4px 12px', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="newest">Sort: Newest</option>
-                <option value="price-asc">Price: Low → High</option>
-                <option value="price-desc">Price: High → Low</option>
-              </select>
             </div>
           </div>
 
@@ -115,14 +94,12 @@ export default function ChixPage({ products, categories, onNavigate, onView, onA
               </button>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                {paged.shown.map((p) => (
-                  <ProductCard key={p.id} product={p} onView={onView} onAddToCart={onAddToCart} size="sm" />
-                ))}
-              </div>
-              <ShowMoreButton remaining={paged.remaining} onClick={paged.more} />
-            </>
+            <AnimeBrowser
+              products={results}
+              onView={onView}
+              onAddToCart={onAddToCart}
+              rootLabel={`All ${active?.label ?? title}`}
+            />
           )}
         </>
       )}
