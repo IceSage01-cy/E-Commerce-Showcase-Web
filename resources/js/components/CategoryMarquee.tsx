@@ -23,11 +23,12 @@ const MARQUEE_CSS = `
 }
 `;
 
-function HexCard({ cat, onClick }: { cat: CategoryInfo; onClick: () => void }) {
+function HexCard({ cat, onClick, duplicate }: { cat: CategoryInfo; onClick: () => void; duplicate: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      tabIndex={duplicate ? -1 : undefined}
       aria-label={`Browse ${cat.label}`}
       className="group flex-shrink-0"
       style={{ width: CARD_W, height: CARD_H, cursor: 'pointer' }}
@@ -104,9 +105,11 @@ export default function CategoryMarquee({ categories, onNavigate }: CategoryMarq
   const duration = Math.max(30, half.length * 8);
 
   const renderHalf = (hidden: boolean) => (
-    <div className="flex flex-shrink-0 gap-8 pr-8" aria-hidden={hidden || undefined} inert={hidden}>
+    // The duplicate half stays clickable (inert would swallow clicks on the visible cards),
+    // but it is hidden from screen readers and skipped by the keyboard.
+    <div className="flex flex-shrink-0 gap-8 pr-8" aria-hidden={hidden || undefined}>
       {half.map(({ key, cat }) => (
-        <HexCard key={`${hidden ? 'b' : 'a'}-${key}`} cat={cat} onClick={() => onNavigate(cat.slug)} />
+        <HexCard key={`${hidden ? 'b' : 'a'}-${key}`} cat={cat} duplicate={hidden} onClick={() => onNavigate(cat.slug)} />
       ))}
     </div>
   );
