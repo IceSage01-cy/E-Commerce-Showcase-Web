@@ -94,10 +94,7 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
               Sale
             </span>
           )}
-        </div>
-
-        {/* Category badge top-right */}
-        <div className="absolute top-2 right-2">
+          {/* Category badge, stacked under the others so narrow phone cards don't overlap */}
           <span
             style={{
               backgroundColor: catColor.bg,
@@ -105,7 +102,7 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
               border: `1px solid ${catColor.border}`,
               fontFamily: 'Outfit, sans-serif',
             }}
-            className="px-2 py-0.5 rounded-full text-[10px] font-600 uppercase tracking-wider"
+            className="self-start px-2 py-0.5 rounded-full text-[10px] font-600 uppercase tracking-wider"
           >
             {categoryLabel[product.category]}
           </span>
