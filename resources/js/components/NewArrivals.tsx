@@ -25,7 +25,6 @@ export default function NewArrivals({ products = [], onView, onAddToCart }: NewA
     <section className="py-16 px-4">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          index="02"
           kicker="Just Added"
           title="New Arrivals"
           accent="#22C55E"

@@ -20,7 +20,6 @@ export default function NendoroidSection({ products, onView, onAddToCart, onNavi
     <section className="py-16 px-4">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          index="04"
           kicker="Good Smile"
           title="Nendoroids"
           accent="#FF2D78"

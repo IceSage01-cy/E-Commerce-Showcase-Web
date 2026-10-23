@@ -15,7 +15,6 @@ export default function FeaturedProducts({ products = [], onView, onAddToCart }:
     <section className="py-16 px-4">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          index="01"
           kicker="Fresh From Japan"
           title="Japan New Arrivals"
           accent="#FF2D78"

@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react';
 
 interface SectionHeadingProps {
-  index?: string;
   kicker?: string;
   title: string;
   accent: string;
   action?: ReactNode;
 }
 
-/** Section and page header: an optional numbered kicker, a heavy uppercase title and an accent rule. */
-export default function SectionHeading({ index, kicker, title, accent, action }: SectionHeadingProps) {
+/** Section and page header: an optional kicker, a heavy uppercase title and an accent rule. */
+export default function SectionHeading({ kicker, title, accent, action }: SectionHeadingProps) {
   return (
     <div className="mb-8">
       <div className="flex items-end justify-between gap-4">
@@ -19,8 +18,6 @@ export default function SectionHeading({ index, kicker, title, accent, action }:
               style={{ color: accent, fontFamily: 'Outfit, sans-serif' }}
               className="flex items-center gap-2 text-xs font-800 uppercase tracking-[0.25em] mb-2"
             >
-              {index && <span>{index}</span>}
-              {index && <span className="inline-block w-6 h-px" style={{ background: accent }} />}
               <span>{kicker}</span>
             </p>
           )}

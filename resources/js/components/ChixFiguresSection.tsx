@@ -43,7 +43,6 @@ export default function ChixFiguresSection({ products = [], onView, onNavigate }
     <section className="py-16 px-4">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          index="03"
           kicker="Our CHIX Line"
           title="CHIX Figures"
           accent={ACCENT}
