@@ -27,7 +27,7 @@ class ProductController extends Controller
             'character' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
             'salePrice' => 'nullable|numeric|min:0',
-            'images' => 'array',
+            'images' => 'required|array|min:1',
             'images.*' => 'string|url:https|max:2048',
             // Listing type (availability): on-hand / pre-order / new-release.
             'category' => 'required|string|in:on-hand,pre-order,new-release',
@@ -54,6 +54,8 @@ class ProductController extends Controller
     private const MESSAGES = [
         'name.unique' => 'A listing with this name, series and condition already exists.',
         'figureType.required' => 'Pick a CHIX figure type (Prize or Scale).',
+        'images.required' => 'Add at least one photo.',
+        'images.min' => 'Add at least one photo.',
     ];
 
     private function mapped(array $data): array

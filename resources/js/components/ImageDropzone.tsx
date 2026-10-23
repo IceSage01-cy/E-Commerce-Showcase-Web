@@ -208,6 +208,8 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
             type="text"
             value={urlValue}
             onChange={(e) => setUrlValue(e.target.value)}
+            // A typed link is added when the field is left, so saving never drops it silently.
+            onBlur={() => { if (urlValue.trim()) addUrl(); }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();

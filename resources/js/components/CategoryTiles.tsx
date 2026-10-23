@@ -8,7 +8,8 @@ interface CategoryTilesProps {
 
 /** Four wide category tiles under Japan New Arrivals: the admin-uploaded picture with the category name over it. */
 export default function CategoryTiles({ categories, onNavigate }: CategoryTilesProps) {
-  const tiles = categories.slice().sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 4);
+  // Every main category gets a tile (the client can add more in Admin -> Categories).
+  const tiles = categories.slice().sort((a, b) => a.sortOrder - b.sortOrder);
   if (tiles.length === 0) return null;
 
   return (

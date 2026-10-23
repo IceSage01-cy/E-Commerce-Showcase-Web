@@ -7,8 +7,9 @@ import ImageDropzone from '../components/ImageDropzone';
 
 interface AdminPageProps {
   products: Product[];
-  onAdd: (p: Omit<Product, 'id'>) => Promise<boolean>;
-  onEdit: (p: Product) => Promise<boolean>;
+  /** Resolves to null when saved, or to the message to show in the form when the server rejected it. */
+  onAdd: (p: Omit<Product, 'id'>) => Promise<string | null>;
+  onEdit: (p: Product) => Promise<string | null>;
   onDelete: (id: string) => void;
   onToggleStock: (id: string, inStock: boolean) => void;
   onToggleFeatured: (id: string, isFeatured: boolean) => void;
@@ -67,6 +68,7 @@ export default function AdminPage({
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
   const [form, setForm] = useState<Omit<Product, 'id'>>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | 'bulk' | null>(null);
   const [search, setSearch] = useState('');
   const [collectionFilter, setCollectionFilter] = useState<string>('all');
@@ -167,17 +169,20 @@ export default function AdminPage({
     !form.series.trim() && 'series',
     !(form.price > 0) && 'price',
     form.collection === CHIX_SLUG && !form.figureType && 'CHIX figure type',
+    form.images.filter(Boolean).length === 0 && 'at least one photo',
   ].filter(Boolean) as string[];
 
   async function saveForm() {
     if (missing.length > 0 || saving) return;
     setSaving(true);
-    const ok = modal?.mode === 'edit' && modal.product
+    setFormError(null);
+    const error = modal?.mode === 'edit' && modal.product
       ? await onEdit({ id: modal.product.id, ...form })
       : await onAdd(form);
     setSaving(false);
-    // Stay open (with everything you typed) if the server rejected it.
-    if (ok) setModal(null);
+    // If the server rejected it, stay open with everything typed and say why.
+    if (error) setFormError(error);
+    else setModal(null);
   }
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -731,7 +736,7 @@ export default function AdminPage({
                                 <svg width="11" height="11" viewBox="0 0 20 20" fill={p.isFeatured ? 'currentColor' : 'none'}>
                                   <path d="M10 2L12.5 7.5H18L13.5 11L15.5 17L10 13.5L4.5 17L6.5 11L2 7.5H7.5L10 2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
                                 </svg>
-                                {p.isFeatured ? 'Featured' : 'Add'}
+                                {p.isFeatured ? 'Featured' : 'Feature'}
                               </button>
                             </div>
 
@@ -769,12 +774,13 @@ export default function AdminPage({
           )}
 
           {/* ── CATEGORIES ── */}
-          {tab === 'categories' && (
+          {/* Kept mounted (hidden when not open) so an unsaved draft survives switching tabs. */}
+          <div style={{ display: tab === 'categories' ? undefined : 'none' }}>
             <CategoriesTab categories={categories} products={products} onAdd={onAddCategory} onEdit={onEditCategory} onDelete={onDeleteCategory} />
-          )}
+          </div>
 
           {/* ── BANNERS ── */}
-          {tab === 'banners' && (
+          <div style={{ display: tab === 'banners' ? undefined : 'none' }}>
             <BannersTab
               banners={banners}
               categories={categories}
@@ -782,7 +788,7 @@ export default function AdminPage({
               onEdit={onEditBanner}
               onDelete={onDeleteBanner}
             />
-          )}
+          </div>
 
           {/* ── ORDERS ── */}
           {tab === 'orders' && (
@@ -1061,7 +1067,8 @@ export default function AdminPage({
                           active={form.figureType === t.value}
                           onClick={() => set('figureType', form.figureType === t.value ? null : t.value)}
                         >
-                          {t.label}
+                          {/* Short names here, so they aren't confused with the "Scale Figures" collection. */}
+                          {t.value === 'prize' ? 'Prize type' : 'Scale type'}
                         </LabelChip>
                       ))}
                     </div>
@@ -1097,8 +1104,12 @@ export default function AdminPage({
               style={{ borderTop: '1px solid #1A1A20', padding: '12px 20px', position: 'sticky', bottom: 0, backgroundColor: '#111114', borderRadius: '0 0 1rem 1rem' }}
               className="flex items-center justify-between gap-3"
             >
-              <p style={{ color: '#FF2D78', fontFamily: 'Inter, sans-serif', fontSize: 12 }} className="min-w-0">
-                {missing.length > 0 ? `Still needed: ${missing.join(', ')}` : ''}
+              <p
+                role={formError ? 'alert' : undefined}
+                style={{ color: formError ? '#F87171' : '#FF2D78', fontFamily: 'Inter, sans-serif', fontSize: 12 }}
+                className="min-w-0"
+              >
+                {formError ?? (missing.length > 0 ? `Still needed: ${missing.join(', ')}` : '')}
               </p>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button

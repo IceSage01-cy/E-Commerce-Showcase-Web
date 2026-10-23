@@ -32,28 +32,27 @@ function AdminRoot() {
   }, []);
 
   // Save handlers resolve to true/false so the form can stay open (with what you typed) when the server says no.
-  async function handleAddProduct(data: Omit<Product, 'id'>): Promise<boolean> {
+  // Resolve to null when saved, or to the message the form should show (no browser alert).
+  async function handleAddProduct(data: Omit<Product, 'id'>): Promise<string | null> {
     try {
       const res = await axios.post('/admin/api/products', data);
       setProducts((prev) => [res.data, ...prev]);
-      return true;
+      return null;
     } catch (err) {
       console.error('Failed to add product', err);
-      alert(apiError(err, 'Could not save the product. Please check the form and try again.'));
-      return false;
+      return apiError(err, 'Could not save the product. Please check the form and try again.');
     }
   }
 
-  async function handleEditProduct(updated: Product): Promise<boolean> {
+  async function handleEditProduct(updated: Product): Promise<string | null> {
     const { id, ...data } = updated;
     try {
       const res = await axios.put(`/admin/api/products/${id}`, data);
       setProducts((prev) => moveToTop(prev, res.data));
-      return true;
+      return null;
     } catch (err) {
       console.error('Failed to update product', err);
-      alert(apiError(err, 'Could not save the product. Please check the form and try again.'));
-      return false;
+      return apiError(err, 'Could not save the product. Please check the form and try again.');
     }
   }
 

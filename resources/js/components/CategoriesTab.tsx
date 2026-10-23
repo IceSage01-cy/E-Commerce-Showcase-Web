@@ -193,7 +193,7 @@ function CategoryEditor({
             }}
             className="font-700"
           >
-            {saving ? 'Saving…' : category ? 'Save' : 'Add category'}
+            {saving ? 'Saving…' : category ? 'Save' : 'Save new category'}
           </button>
         </div>
       </div>

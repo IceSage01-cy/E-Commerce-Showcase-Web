@@ -27,7 +27,24 @@ class CatalogTest extends TestCase
             'collection' => 'anime-figures',
             'condition' => 'MIB',
             'inStock' => true,
+            'images' => ['https://example.com/photo.jpg'],
         ], $overrides);
+    }
+
+    public function test_a_product_needs_at_least_one_photo(): void
+    {
+        $this->admin()->postJson('/admin/api/products', $this->payload(['images' => []]))
+            ->assertStatus(422)
+            ->assertJsonPath('errors.images.0', 'Add at least one photo.');
+    }
+
+    public function test_a_duplicate_product_gets_a_readable_message(): void
+    {
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Same One']))->assertCreated();
+
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Same One']))
+            ->assertStatus(422)
+            ->assertJsonPath('errors.name.0', 'A listing with this name, series and condition already exists.');
     }
 
     // ── Seeders ────────────────────────────────────────────────────────

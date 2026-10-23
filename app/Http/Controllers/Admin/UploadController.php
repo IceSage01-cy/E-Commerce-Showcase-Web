@@ -43,7 +43,7 @@ class UploadController extends Controller
             Log::error('R2 upload failed', ['error' => $e->getMessage()]);
 
             return response()->json([
-                'message' => 'Upload failed — the storage bucket rejected the file. Check the R2 credentials in your environment settings.',
+                'message' => 'The photo could not be uploaded right now. Try again in a moment, or paste a link to the photo instead.',
             ], 500);
         }
 
@@ -55,7 +55,7 @@ class UploadController extends Controller
             Log::error('R2 upload returned false without throwing', ['filename' => $filename]);
 
             return response()->json([
-                'message' => 'Upload failed — the storage bucket rejected the file. Check the R2 credentials in your environment settings.',
+                'message' => 'The photo could not be uploaded right now. Try again in a moment, or paste a link to the photo instead.',
             ], 500);
         }
 
