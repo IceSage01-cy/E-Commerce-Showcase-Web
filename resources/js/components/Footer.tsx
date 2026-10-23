@@ -15,12 +15,14 @@ const linkClass = 'block text-xs mb-2 text-left hover:text-[#80808C] transition-
 export default function Footer({ categories, onNavigate }: FooterProps) {
   return (
     <footer
+      // Full window width, like the hero; the content inside stays in the 1280px column.
       style={{
         backgroundColor: '#0D0D10',
         borderTop: '1px solid #1A1A20',
         fontFamily: 'Inter, sans-serif',
+        marginLeft: 'calc(50% - 50vw)',
       }}
-      className="py-12 px-4 mt-4"
+      className="relative w-screen py-12 px-4 mt-4"
     >
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
