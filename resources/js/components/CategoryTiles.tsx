@@ -1,4 +1,5 @@
 import type { CategoryInfo } from '../data/products';
+import { CHIX_SLUG } from '../data/products';
 import { hexToRgba } from '../lib/color';
 
 interface CategoryTilesProps {
@@ -8,8 +9,11 @@ interface CategoryTilesProps {
 
 /** Four wide category tiles under Japan New Arrivals: the admin-uploaded picture with the category name over it. */
 export default function CategoryTiles({ categories, onNavigate }: CategoryTilesProps) {
-  // Every main category gets a tile (the client can add more in Admin -> Categories).
-  const tiles = categories.slice().sort((a, b) => a.sortOrder - b.sortOrder);
+  // Every main category gets a tile except CHIX, which has its own section on the homepage.
+  // CHIX stays in the navigation.
+  const tiles = categories
+    .filter((c) => c.slug !== CHIX_SLUG)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   if (tiles.length === 0) return null;
 
   return (
