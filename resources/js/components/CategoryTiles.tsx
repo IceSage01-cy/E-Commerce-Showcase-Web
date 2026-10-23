@@ -1,5 +1,5 @@
 import type { CategoryInfo } from '../data/products';
-import { hexToRgba } from './CategoriesSection';
+import { hexToRgba } from '../lib/color';
 
 interface CategoryTilesProps {
   categories: CategoryInfo[];

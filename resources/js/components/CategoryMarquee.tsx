@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { hexToRgba } from './CategoriesSection';
+import { hexToRgba } from '../lib/color';
 
 /** One card in the strip: a label, a picture and an accent colour. `key` is passed back on click. */
 export interface StripItem {

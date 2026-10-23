@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { CategoryInfo, CategoryStyle, Product } from '../data/products';
 import { CATEGORY_STYLES } from '../data/products';
-import { CategoryCard } from './CategoriesSection';
+import { CategoryCard } from './CategoryCard';
 import ImageDropzone from './ImageDropzone';
 
 export interface CategoryFormData {

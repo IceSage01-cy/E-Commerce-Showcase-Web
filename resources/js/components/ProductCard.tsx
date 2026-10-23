@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import type { Product } from '../data/products';
 import { getStockStyle, formatPrice } from '../data/products';
-import { hexToRgba } from './CategoriesSection';
+import { hexToRgba } from '../lib/color';
 
 interface ProductCardProps {
   product: Product;

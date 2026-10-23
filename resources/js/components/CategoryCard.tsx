@@ -1,16 +1,5 @@
 import type { CategoryInfo } from '../data/products';
-import { FALLBACK_CATEGORIES } from '../data/products';
-
-interface CategoriesSectionProps {
-  categories: CategoryInfo[];
-  onNavigate: (cat: string) => void;
-}
-
-export const hexToRgba = (hex: string, alpha: number) => {
-  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
-  if (!m) return `rgba(255,45,120,${alpha})`;
-  return `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${alpha})`;
-};
+import { hexToRgba } from '../lib/color';
 
 function Arrow({ color }: { color: string }) {
   return (
@@ -108,49 +97,3 @@ export function CategoryCard({ cat, onClick, wide }: { cat: CategoryInfo; onClic
   );
 }
 
-/**
- * Column spans on a 6-column grid so every row is full, whatever the number of categories:
- * rows of three; a leftover single card spans the whole row, two leftovers share it.
- */
-function spanFor(index: number, total: number): { cls: string; wide: boolean } {
-  const rem = total % 3;
-  const inLastRow = index >= total - rem;
-  if (rem === 1 && inLastRow) return { cls: 'sm:col-span-6', wide: true };
-  if (rem === 2 && inLastRow) return { cls: 'sm:col-span-3', wide: false };
-  return { cls: 'sm:col-span-2', wide: false };
-}
-
-export default function CategoriesSection({ categories, onNavigate }: CategoriesSectionProps) {
-  const list = (categories.length ? categories : FALLBACK_CATEGORIES)
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder);
-
-  return (
-    <section className="py-12 px-4" style={{ borderTop: '1px solid #1A1A20' }}>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <p
-            style={{ color: '#80808C', fontFamily: 'Outfit, sans-serif', fontSize: 11 }}
-            className="font-700 uppercase tracking-widest mb-1"
-          >
-            Browse By
-          </p>
-          <h2 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl sm:text-3xl font-800">
-            Categories
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
-          {list.map((cat, i) => {
-            const { cls, wide } = spanFor(i, list.length);
-            return (
-              <div key={cat.slug} className={cls}>
-                <CategoryCard cat={cat} wide={wide} onClick={() => onNavigate(cat.slug)} />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
