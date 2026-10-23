@@ -3,9 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Banner;
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
+use Database\Seeders\CategorySeeder;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CatalogTest extends TestCase
@@ -74,12 +79,12 @@ class CatalogTest extends TestCase
     public function test_seeding_repeatedly_never_duplicates_anything(): void
     {
         $this->seed(DatabaseSeeder::class);
-        $counts = [Product::count(), Banner::count(), \App\Models\User::count()];
+        $counts = [Product::count(), Banner::count(), User::count()];
 
         $this->seed(DatabaseSeeder::class);
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame($counts, [Product::count(), Banner::count(), \App\Models\User::count()]);
+        $this->assertSame($counts, [Product::count(), Banner::count(), User::count()]);
         $this->assertGreaterThan(0, $counts[0]);
     }
 
@@ -101,7 +106,7 @@ class CatalogTest extends TestCase
     {
         Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'MIB']);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
         Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'MIB']);
     }
 
@@ -202,15 +207,15 @@ class CatalogTest extends TestCase
 
     public function test_main_categories_exist_and_admin_can_change_their_picture(): void
     {
-        $this->seed(\Database\Seeders\CategorySeeder::class);
-        $unauthorised = \App\Models\Category::firstOrFail();
+        $this->seed(CategorySeeder::class);
+        $unauthorised = Category::firstOrFail();
         // Checked before admin() is used: withSession() sticks to the test for every later request.
         $this->putJson("/admin/api/categories/{$unauthorised->id}", ['label' => 'x'])->assertUnauthorized();
 
         $slugs = collect($this->getJson('/api/categories')->assertOk()->json())->pluck('slug')->all();
         $this->assertSame(['anime-figures', 'scale-figures', 'rare-exclusive', 'chix-figures'], $slugs);
 
-        $category = \App\Models\Category::where('slug', 'chix-figures')->firstOrFail();
+        $category = Category::where('slug', 'chix-figures')->firstOrFail();
         $this->admin()->putJson("/admin/api/categories/{$category->id}", [
             'label' => 'CHIX Figures',
             'image' => 'https://cdn.example.com/categories/chix.jpg',
@@ -225,7 +230,7 @@ class CatalogTest extends TestCase
         $this->getJson('/api/categories')->assertJsonPath('3.image', 'https://cdn.example.com/categories/chix.jpg');
 
         // Seeding again must not wipe the picture the admin set.
-        $this->seed(\Database\Seeders\CategorySeeder::class);
+        $this->seed(CategorySeeder::class);
         $this->assertSame('https://cdn.example.com/categories/chix.jpg', $category->fresh()->image_url);
     }
 
@@ -274,7 +279,7 @@ class CatalogTest extends TestCase
 
     public function test_admin_can_delete_a_category_and_move_its_products(): void
     {
-        $empty = \App\Models\Category::create(['slug' => 'empty-shelf', 'label' => 'Empty Shelf', 'sort_order' => 9]);
+        $empty = Category::create(['slug' => 'empty-shelf', 'label' => 'Empty Shelf', 'sort_order' => 9]);
         $this->deleteJson("/admin/api/categories/{$empty->id}")->assertUnauthorized();
 
         // A category with no products can simply be deleted.
@@ -284,7 +289,7 @@ class CatalogTest extends TestCase
         // One that still has products asks where they should go...
         $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix A', 'collection' => 'chix-figures', 'figureType' => 'prize']))->assertCreated();
         $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Chix B', 'collection' => 'chix-figures', 'figureType' => 'prize']))->assertCreated();
-        $chix = \App\Models\Category::where('slug', 'chix-figures')->firstOrFail();
+        $chix = Category::where('slug', 'chix-figures')->firstOrFail();
 
         $this->admin()->deleteJson("/admin/api/categories/{$chix->id}")
             ->assertStatus(422)->assertJsonValidationErrors('moveTo');
@@ -307,8 +312,8 @@ class CatalogTest extends TestCase
 
     public function test_the_last_category_cannot_be_deleted(): void
     {
-        \App\Models\Category::where('slug', '!=', 'anime-figures')->delete();
-        $last = \App\Models\Category::firstOrFail();
+        Category::where('slug', '!=', 'anime-figures')->delete();
+        $last = Category::firstOrFail();
 
         $this->admin()->deleteJson("/admin/api/categories/{$last->id}")
             ->assertStatus(422)->assertJsonValidationErrors('category');
@@ -317,10 +322,10 @@ class CatalogTest extends TestCase
 
     public function test_reseeding_does_not_bring_back_a_deleted_category(): void
     {
-        $chix = \App\Models\Category::where('slug', 'chix-figures')->firstOrFail();
+        $chix = Category::where('slug', 'chix-figures')->firstOrFail();
         $this->admin()->deleteJson("/admin/api/categories/{$chix->id}")->assertOk();
 
-        $this->seed(\Database\Seeders\CategorySeeder::class);
+        $this->seed(CategorySeeder::class);
 
         $this->assertDatabaseMissing('categories', ['slug' => 'chix-figures']);
     }
@@ -388,7 +393,7 @@ class CatalogTest extends TestCase
 
     public function test_existing_conditions_are_migrated_to_the_new_names(): void
     {
-        \Illuminate\Support\Facades\DB::table('products')->insert([
+        DB::table('products')->insert([
             ['name' => 'Old sealed', 'series' => 'S', 'condition' => 'Sealed', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Old new', 'series' => 'S', 'condition' => 'New', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Old preowned', 'series' => 'S', 'condition' => 'Pre-owned', 'price' => 1, 'created_at' => now(), 'updated_at' => now()],

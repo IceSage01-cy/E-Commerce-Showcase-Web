@@ -16,19 +16,19 @@ use Illuminate\Database\Seeder;
 class ChixFigureSeeder extends Seeder
 {
     private const IMAGES = [
-            'https://images.unsplash.com/photo-1762008387452-25fe91ab3f90?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1762376622511-0c1d97912bf5?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1762786613960-96fc8a8d8d6b?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1765633359000-4be57ed87b29?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1767700629009-c5b5dc7b5947?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1768475022554-303bde099069?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1770116119301-87ff10661443?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1770116119330-2c80bc762d0b?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1770288784491-38537cc095b0?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1770288784592-a93a96be0bb2?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1777730039398-830cddd1cf15?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1783765803308-fc2eba85cc2b?w=800&h=800&fit=crop&auto=format',
-            'https://images.unsplash.com/photo-1788928808718-c8bf344f4ee7?w=800&h=800&fit=crop&auto=format'
+        'https://images.unsplash.com/photo-1762008387452-25fe91ab3f90?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1762376622511-0c1d97912bf5?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1762786613960-96fc8a8d8d6b?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1765633359000-4be57ed87b29?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1767700629009-c5b5dc7b5947?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1768475022554-303bde099069?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1770116119301-87ff10661443?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1770116119330-2c80bc762d0b?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1770288784491-38537cc095b0?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1770288784592-a93a96be0bb2?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1777730039398-830cddd1cf15?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1783765803308-fc2eba85cc2b?w=800&h=800&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1788928808718-c8bf344f4ee7?w=800&h=800&fit=crop&auto=format',
     ];
 
     private static function img(int $i): string
