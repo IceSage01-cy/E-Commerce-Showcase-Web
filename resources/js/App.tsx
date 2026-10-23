@@ -16,6 +16,18 @@ import SectionHeading from './components/SectionHeading';
 import type { Product, CategoryInfo } from './data/products';
 import { FALLBACK_CATEGORIES, CHIX_SLUG } from './data/products';
 
+// The cart survives a reload or closing the tab. Storage can be blocked (private browsing), so every access is guarded.
+const CART_KEY = 'pandas-attic-cart';
+
+function loadCart(): string[] {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(CART_KEY) ?? '[]');
+    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
 type Route =
   | { type: 'home' }
   | { type: 'product'; id: string }
@@ -36,7 +48,7 @@ export default function App() {
   // Series name => cover picture URL (only series that have one).
   const [animeCovers, setAnimeCovers] = useState<Record<string, string>>({});
   const [productsLoading, setProductsLoading] = useState(true);
-  const [cart, setCart] = useState<string[]>([]);
+  const [cart, setCart] = useState<string[]>(loadCart);
   const [cartToast, setCartToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -45,6 +57,16 @@ export default function App() {
       setProducts(res.data);
     }).finally(() => setProductsLoading(false));
   }, []);
+
+  // A saved cart can hold products that were deleted since the visit. Drop them so the cart count stays honest.
+  useEffect(() => {
+    if (products.length === 0) return;
+    const known = new Set(products.map((p) => p.id));
+    setCart((prev) => {
+      const valid = prev.filter((id) => known.has(id));
+      return valid.length === prev.length ? prev : valid;
+    });
+  }, [products]);
 
   useEffect(() => {
     // Main categories + their admin-managed background pictures. The page works without them (fallback tiles).
@@ -55,6 +77,14 @@ export default function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [route]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    } catch {
+      // Storage full or blocked: the cart still works for this visit.
+    }
+  }, [cart]);
 
   function navigate(page: string) {
     if (page === 'home') setRoute({ type: 'home' });
@@ -238,7 +268,7 @@ export default function App() {
         )}
       </main>
 
-      <Footer />
+      <Footer categories={navCategories} onNavigate={navigate} />
 
       {/* Cart toast */}
       {cartToast && (

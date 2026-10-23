@@ -1,4 +1,18 @@
-export default function Footer() {
+import type { CategoryInfo } from '../data/products';
+
+// Facebook page and Messenger thread the shop already uses for orders (see CartPage).
+const FACEBOOK_PAGE = 'https://www.facebook.com/TOYcomManjiGangAuthenticFigures';
+const FACEBOOK_MESSENGER = 'https://www.facebook.com/messages/t/100066661427714';
+
+interface FooterProps {
+  categories: CategoryInfo[];
+  onNavigate: (page: string) => void;
+}
+
+const linkStyle = { color: '#50505C', background: 'none', padding: 0, fontFamily: 'Inter, sans-serif' };
+const linkClass = 'block text-xs mb-2 text-left hover:text-[#80808C] transition-colors';
+
+export default function Footer({ categories, onNavigate }: FooterProps) {
   return (
     <footer
       style={{
@@ -26,28 +40,36 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Shop */}
+          {/* Shop: the same categories as the navigation, plus Japan New Arrivals */}
           <div>
             <p style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif' }} className="text-sm font-600 mb-3">Shop</p>
-            {['Anime Figures', 'Scale Figures', 'Rare / Exclusive Items', 'CHIX Figures', 'Japan New Arrivals'].map((l) => (
-              <p key={l} style={{ color: '#50505C' }} className="text-xs mb-2 hover:text-[#80808C] cursor-pointer transition-colors">{l}</p>
+            {categories.map((c) => (
+              <button key={c.slug} type="button" onClick={() => onNavigate(c.slug)} style={linkStyle} className={linkClass}>
+                {c.label}
+              </button>
             ))}
+            <button type="button" onClick={() => onNavigate('japan-new-arrivals')} style={linkStyle} className={linkClass}>
+              Japan New Arrivals
+            </button>
           </div>
 
           {/* Info */}
           <div>
             <p style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif' }} className="text-sm font-600 mb-3">Info</p>
-            {['Shipping Policy', 'Pre-Order FAQ', 'Returns', 'Contact Us'].map((l) => (
-              <p key={l} style={{ color: '#50505C' }} className="text-xs mb-2 hover:text-[#80808C] cursor-pointer transition-colors">{l}</p>
-            ))}
+            <button type="button" onClick={() => onNavigate('pre-order')} style={linkStyle} className={linkClass}>
+              Pre-Orders
+            </button>
+            <a href={FACEBOOK_MESSENGER} target="_blank" rel="noopener noreferrer" style={linkStyle} className={linkClass}>
+              Contact Us
+            </a>
           </div>
 
           {/* Social */}
           <div>
             <p style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif' }} className="text-sm font-600 mb-3">Follow Us</p>
-            {['Facebook', 'Instagram', 'TikTok', 'Shopee'].map((l) => (
-              <p key={l} style={{ color: '#50505C' }} className="text-xs mb-2 hover:text-[#80808C] cursor-pointer transition-colors">{l}</p>
-            ))}
+            <a href={FACEBOOK_PAGE} target="_blank" rel="noopener noreferrer" style={linkStyle} className={linkClass}>
+              Facebook
+            </a>
           </div>
         </div>
 
