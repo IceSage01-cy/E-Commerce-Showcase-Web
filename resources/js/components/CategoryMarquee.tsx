@@ -26,8 +26,12 @@ const MARQUEE_CSS = `
   from { transform: translateX(-50%); }
   to { transform: translateX(0); }
 }
-.category-marquee-track { animation: category-marquee var(--marquee-duration) linear infinite; }
-.category-marquee:hover .category-marquee-track { animation-play-state: paused; }
+/* GPU layer for the moving track, so Safari (iPhone) animates it smoothly instead of skipping frames. */
+.category-marquee-track {
+  animation: category-marquee var(--marquee-duration) linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
 
 .hex-card {
   position: relative;
@@ -35,41 +39,45 @@ const MARQUEE_CSS = `
   cursor: pointer;
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.hex-card:hover,
-.hex-card:focus-visible { transform: translateY(-8px) scale(1.05); }
-.hex-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+.hex-card:focus-visible { transform: translateY(-8px) scale(1.05); outline: 2px solid var(--accent); outline-offset: 6px; }
 .hex-frame {
   filter: drop-shadow(0 0 10px var(--glow-soft));
   transition: filter 0.35s;
 }
-.hex-card:hover .hex-frame,
-.hex-card:focus-visible .hex-frame { filter: drop-shadow(0 0 24px var(--accent)); }
 .hex-image { transition: transform 0.6s; }
-.hex-card:hover .hex-image { transform: scale(1.15); }
 .hex-tint {
   opacity: 0.25;
   transition: opacity 0.35s;
 }
-.hex-card:hover .hex-tint { opacity: 0.6; }
 .hex-label {
   transition: text-shadow 0.35s, letter-spacing 0.35s;
-}
-.hex-card:hover .hex-label {
-  text-shadow: 0 0 18px var(--accent), 0 1px 4px rgba(0, 0, 0, 0.7);
-  letter-spacing: 0.08em;
 }
 .hex-bar {
   width: 28px;
   transition: width 0.35s;
 }
-.hex-card:hover .hex-bar { width: 64px; }
 .hex-arrow {
   transition: background-color 0.3s, color 0.3s, transform 0.3s;
 }
-.hex-card:hover .hex-arrow {
-  background-color: var(--accent);
-  color: #0A0A0B;
-  transform: translateX(3px);
+
+/* Hover effects and pausing only for a real mouse or trackpad. On touchscreens (iPhone, Android) a tap
+   or a scroll over the strip leaves a "hover" stuck on it, which froze the strip until the next tap elsewhere. */
+@media (hover: hover) and (pointer: fine) {
+  .category-marquee:hover .category-marquee-track { animation-play-state: paused; }
+  .hex-card:hover { transform: translateY(-8px) scale(1.05); }
+  .hex-card:hover .hex-frame { filter: drop-shadow(0 0 24px var(--accent)); }
+  .hex-card:hover .hex-image { transform: scale(1.15); }
+  .hex-card:hover .hex-tint { opacity: 0.6; }
+  .hex-card:hover .hex-label {
+    text-shadow: 0 0 18px var(--accent), 0 1px 4px rgba(0, 0, 0, 0.7);
+    letter-spacing: 0.08em;
+  }
+  .hex-card:hover .hex-bar { width: 64px; }
+  .hex-card:hover .hex-arrow {
+    background-color: var(--accent);
+    color: #0A0A0B;
+    transform: translateX(3px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
