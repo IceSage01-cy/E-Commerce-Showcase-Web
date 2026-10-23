@@ -78,6 +78,8 @@ export interface Product {
   condition: Condition;
   inStock: boolean;
   isFeatured: boolean;
+  /** Part of the Nendoroid line: shown in the Nendoroids section, not tied to a main category. */
+  isNendoroid: boolean;
   dateAdded: string;
   description: string;
   manufacturer: string;

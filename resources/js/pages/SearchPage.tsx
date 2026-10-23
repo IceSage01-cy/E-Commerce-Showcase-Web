@@ -168,8 +168,12 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
               />
               <Pill label="On Hand" active={categoryFilter === 'on-hand'} onClick={() => setCategoryFilter('on-hand')} />
               <Pill label="Pre-Order" active={categoryFilter === 'pre-order'} onClick={() => setCategoryFilter('pre-order')} />
-              <Pill label="Prize" active={figureTypeFilter === 'prize'} onClick={() => setFigureTypeFilter('prize')} />
-              <Pill label="Scale" active={figureTypeFilter === 'scale'} onClick={() => setFigureTypeFilter('scale')} />
+              {collectionFilter !== SCALE_SLUG && (
+                <>
+                  <Pill label="Prize" active={figureTypeFilter === 'prize'} onClick={() => setFigureTypeFilter('prize')} />
+                  <Pill label="Scale" active={figureTypeFilter === 'scale'} onClick={() => setFigureTypeFilter('scale')} />
+                </>
+              )}
             </div>
 
             <div style={{ backgroundColor: '#222228', width: 1, height: 20 }} className="mx-1 hidden sm:block" />

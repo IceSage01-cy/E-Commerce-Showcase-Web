@@ -16,6 +16,8 @@ interface AnimeBrowserProps {
   split?: BrowseSplit;
   /** Breadcrumb text for the top level, e.g. "All Anime". */
   rootLabel?: string;
+  /** Start inside this anime (the anime page): the series step is skipped and the top crumb goes back to its characters. */
+  fixedSeries?: string;
 }
 
 interface GroupTile {
@@ -41,9 +43,9 @@ function groupBy(products: Product[], key: keyof Product, labelOf: (value: strin
  * Drill-down browser: [split] > series (anime) > character > figures.
  * The split level is only shown when a `split` is given (CHIX and Scale Figures).
  */
-export default function AnimeBrowser({ products, onView, onAddToCart, split, rootLabel = 'All Anime' }: AnimeBrowserProps) {
+export default function AnimeBrowser({ products, onView, onAddToCart, split, rootLabel = 'All Anime', fixedSeries }: AnimeBrowserProps) {
   const [splitValue, setSplitValue] = useState<string | null>(null);
-  const [series, setSeries] = useState<string | null>(null);
+  const [series, setSeries] = useState<string | null>(fixedSeries ?? null);
   const [character, setCharacter] = useState<string | null>(null);
 
   const splitTiles = useMemo(
@@ -81,7 +83,7 @@ export default function AnimeBrowser({ products, onView, onAddToCart, split, roo
         style={{ fontFamily: 'Inter, sans-serif', fontSize: 13 }}
       >
         <button
-          onClick={() => { setSplitValue(null); setSeries(null); setCharacter(null); }}
+          onClick={() => { setSplitValue(null); setSeries(fixedSeries ?? null); setCharacter(null); }}
           style={crumbStyle(!splitValue && !series)}
           className="hover:text-white transition-colors"
         >
@@ -99,7 +101,7 @@ export default function AnimeBrowser({ products, onView, onAddToCart, split, roo
             </button>
           </>
         )}
-        {series && (
+        {series && !fixedSeries && (
           <>
             <span style={{ color: '#30303C' }}>/</span>
             <button

@@ -1,10 +1,17 @@
 import type { CSSProperties } from 'react';
-import type { CategoryInfo } from '../data/products';
 import { hexToRgba } from './CategoriesSection';
 
+/** One card in the strip: a label, a picture and an accent colour. `key` is passed back on click. */
+export interface StripItem {
+  key: string;
+  label: string;
+  image: string | null;
+  accent: string;
+}
+
 interface CategoryMarqueeProps {
-  categories: CategoryInfo[];
-  onNavigate: (cat: string) => void;
+  items: StripItem[];
+  onSelect: (key: string) => void;
 }
 
 const CARD_W = 172;
@@ -72,7 +79,7 @@ const MARQUEE_CSS = `
 }
 `;
 
-function HexCard({ cat, onClick, duplicate }: { cat: CategoryInfo; onClick: () => void; duplicate: boolean }) {
+function HexCard({ cat, onClick, duplicate }: { cat: StripItem; onClick: () => void; duplicate: boolean }) {
   const vars = {
     '--accent': cat.accent,
     '--glow-soft': hexToRgba(cat.accent, 0.55),
@@ -143,13 +150,12 @@ function HexCard({ cat, onClick, duplicate }: { cat: CategoryInfo; onClick: () =
   );
 }
 
-export default function CategoryMarquee({ categories, onNavigate }: CategoryMarqueeProps) {
-  if (categories.length === 0) return null;
+export default function CategoryMarquee({ items, onSelect }: CategoryMarqueeProps) {
+  if (items.length === 0) return null;
 
-  const sorted = categories.slice().sort((a, b) => a.sortOrder - b.sortOrder);
   // Repeat the list so one half is wider than any screen, then duplicate that half for the seamless loop.
   const half = [0, 1, 2].flatMap((copy) =>
-    sorted.map((cat) => ({ key: `${copy}-${cat.slug}`, cat })),
+    items.map((cat) => ({ key: `${copy}-${cat.key}`, cat })),
   );
   const duration = Math.max(30, half.length * 8);
 
@@ -158,7 +164,7 @@ export default function CategoryMarquee({ categories, onNavigate }: CategoryMarq
     // but it is hidden from screen readers and skipped by the keyboard.
     <div className="flex flex-shrink-0 gap-8 pr-8" aria-hidden={hidden || undefined}>
       {half.map(({ key, cat }) => (
-        <HexCard key={`${hidden ? 'b' : 'a'}-${key}`} cat={cat} duplicate={hidden} onClick={() => onNavigate(cat.slug)} />
+        <HexCard key={`${hidden ? 'b' : 'a'}-${key}`} cat={cat} duplicate={hidden} onClick={() => onSelect(cat.key)} />
       ))}
     </div>
   );

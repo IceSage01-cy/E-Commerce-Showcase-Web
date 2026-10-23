@@ -32,6 +32,7 @@ class Product extends Model
         'condition',
         'in_stock',
         'is_featured',
+        'is_nendoroid',
         'date_added',
         'description',
         'manufacturer',
@@ -46,6 +47,7 @@ class Product extends Model
         'sale_price' => 'decimal:2',
         'in_stock' => 'boolean',
         'is_featured' => 'boolean',
+        'is_nendoroid' => 'boolean',
         'date_added' => 'date',
     ];
 
@@ -80,6 +82,7 @@ class Product extends Model
             'condition' => $this->condition,
             'inStock' => $this->in_stock,
             'isFeatured' => $this->is_featured,
+            'isNendoroid' => $this->is_nendoroid,
             'dateAdded' => $this->date_added?->format('Y-m-d'),
             'description' => $this->description ?? '',
             'manufacturer' => $this->manufacturer ?? '',

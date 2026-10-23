@@ -8,6 +8,9 @@ import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
 import CartPage from './pages/CartPage';
 import ChixPage from './pages/ChixPage';
+import NendoroidsPage from './pages/NendoroidsPage';
+import AnimeBrowser from './components/AnimeBrowser';
+import SectionHeading from './components/SectionHeading';
 import type { Product, CategoryInfo } from './data/products';
 import { FALLBACK_CATEGORIES, CHIX_SLUG } from './data/products';
 
@@ -18,6 +21,8 @@ type Route =
   | { type: 'category'; category: string }
   | { type: 'collection'; collection: string }
   | { type: 'chix' }
+  | { type: 'nendoroids' }
+  | { type: 'anime'; series: string }
   | { type: 'new-arrivals' }
   | { type: 'cart' };
 
@@ -50,6 +55,8 @@ export default function App() {
     else if (page === 'cart') setRoute({ type: 'cart' });
     else if (page === CHIX_SLUG) setRoute({ type: 'chix' });
     else if (page === 'new-arrivals') setRoute({ type: 'new-arrivals' });
+    else if (page === 'nendoroids') setRoute({ type: 'nendoroids' });
+    else if (products.some((p) => p.series === page)) setRoute({ type: 'anime', series: page });
     else if (navCategories.some((c) => c.slug === page)) setRoute({ type: 'collection', collection: page });
     else if (['on-hand', 'pre-order', 'new-release'].includes(page)) {
       setRoute({ type: 'category', category: page });
@@ -122,7 +129,7 @@ export default function App() {
             Setting the table…
           </div>
         ) : route.type === 'home' && (
-          <HomePage products={products} categories={categories} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
+          <HomePage products={products} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
         )}
         {route.type === 'product' && (
           <ProductDetailPage
@@ -176,6 +183,22 @@ export default function App() {
             onView={viewProduct}
             onAddToCart={addToCart}
           />
+        )}
+        {route.type === 'nendoroids' && (
+          <NendoroidsPage products={products} onView={viewProduct} onAddToCart={addToCart} onNavigate={navigate} />
+        )}
+        {route.type === 'anime' && (
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <SectionHeading kicker="Anime" title={route.series} accent="#FF2D78" />
+            <AnimeBrowser
+              key={route.series}
+              products={products.filter((p) => p.series === route.series)}
+              onView={viewProduct}
+              onAddToCart={addToCart}
+              rootLabel={route.series}
+              fixedSeries={route.series}
+            />
+          </div>
         )}
         {route.type === 'new-arrivals' && (
           <div className="max-w-7xl mx-auto px-4 py-8">

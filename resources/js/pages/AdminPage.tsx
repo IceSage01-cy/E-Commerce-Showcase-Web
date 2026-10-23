@@ -50,6 +50,7 @@ const emptyForm = (collection: Collection = ''): Omit<Product, 'id'> => ({
   condition: 'MIB',
   inStock: true,
   isFeatured: false,
+  isNendoroid: false,
   dateAdded: new Date().toISOString().slice(0, 10),
   description: '',
   manufacturer: '',
@@ -989,6 +990,39 @@ export default function AdminPage({
                     />
                   </button>
                   <span style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>Show in Japan New Arrivals</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => set('isNendoroid', !form.isNendoroid)}
+                    aria-pressed={form.isNendoroid}
+                    style={{
+                      width: 40,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: form.isNendoroid ? '#FF2D78' : '#222228',
+                      border: 'none',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 3,
+                        left: form.isNendoroid ? 21 : 3,
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: '#fff',
+                        transition: 'left 0.2s',
+                        display: 'block',
+                      }}
+                    />
+                  </button>
+                  <span style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>Nendoroid line (shows in the Nendoroids section)</span>
                 </div>
               </FormSection>
 
