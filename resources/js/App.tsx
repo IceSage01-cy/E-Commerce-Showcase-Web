@@ -8,7 +8,7 @@ import SearchPage from './pages/SearchPage';
 import ProductCard from './components/ProductCard';
 import CartPage from './pages/CartPage';
 import ChixPage from './pages/ChixPage';
-import type { Product, CategoryInfo } from './data/products';
+import type { Product, CategoryInfo, BrowseFilter, BrowseSort, FigureType } from './data/products';
 import { FALLBACK_CATEGORIES, CHIX_SLUG } from './data/products';
 
 type Route =
@@ -16,7 +16,7 @@ type Route =
   | { type: 'product'; id: string }
   | { type: 'search'; query: string; category?: string }
   | { type: 'category'; category: string }
-  | { type: 'collection'; collection: string }
+  | { type: 'collection'; collection: string; category?: string; figureType?: FigureType | 'all'; sort?: BrowseSort }
   | { type: 'chix' }
   | { type: 'new-arrivals' }
   | { type: 'cart' };
@@ -66,6 +66,17 @@ export default function App() {
     setRoute({ type: 'search', query, category });
   }
 
+  /** Nav dropdown: open the collection with the picked filters applied. */
+  function handleBrowse(filter: BrowseFilter) {
+    setRoute({
+      type: 'collection',
+      collection: filter.collection,
+      category: filter.category,
+      figureType: filter.figureType,
+      sort: filter.sort,
+    });
+  }
+
   function removeFromCart(id: string) {
     setCart((prev) => {
       const idx = prev.lastIndexOf(id);
@@ -102,7 +113,7 @@ export default function App() {
 
   return (
     <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
-      <Header categories={navCategories} onSearch={(q) => handleSearch(q)} onNavigate={navigate} cartCount={cart.length} />
+      <Header categories={navCategories} onSearch={(q) => handleSearch(q)} onNavigate={navigate} onBrowse={handleBrowse} cartCount={cart.length} />
 
       <main style={{ paddingBottom: 16 }}>
         {productsLoading && route.type === 'home' && products.length === 0 ? (
@@ -146,9 +157,12 @@ export default function App() {
         )}
         {route.type === 'collection' && (
           <SearchPage
-            key={`collection-${route.collection}`}
+            key={`collection-${route.collection}-${route.category}-${route.figureType}-${route.sort}`}
             initialQuery=""
             initialCollection={route.collection}
+            initialCategory={route.category}
+            initialFigureType={route.figureType}
+            initialSort={route.sort}
             categories={navCategories}
             onView={viewProduct}
             onAddToCart={addToCart}

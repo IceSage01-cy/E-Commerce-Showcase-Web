@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import type { Product, Category, CategoryInfo, FigureType } from '../data/products';
-import { FALLBACK_CATEGORIES, CHIX_SLUG, FIGURE_TYPES } from '../data/products';
+import type { Product, Category, CategoryInfo, FigureType, BrowseSort } from '../data/products';
+import { FALLBACK_CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { usePaged, ShowMoreButton } from '../components/ShowMore';
 import AnimeBrowser, { type BrowseSplit } from '../components/AnimeBrowser';
@@ -13,6 +13,8 @@ interface SearchPageProps {
   initialCategory?: string;
   /** Main category (Anime Figures, Scale Figures, ...) to start filtered on. */
   initialCollection?: string;
+  initialFigureType?: FigureType | 'all';
+  initialSort?: BrowseSort;
   categories?: CategoryInfo[];
   onView: (id: string) => void;
   onAddToCart: (id: string) => void;
@@ -22,9 +24,9 @@ interface SearchPageProps {
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 
-export default function SearchPage({ initialQuery, initialCategory, initialCollection, categories = FALLBACK_CATEGORIES, onView, onAddToCart, onSearch, products }: SearchPageProps) {
+export default function SearchPage({ initialQuery, initialCategory, initialCollection, initialFigureType = 'all', initialSort = 'relevance', categories = FALLBACK_CATEGORIES, onView, onAddToCart, onSearch, products }: SearchPageProps) {
   const [query, setQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>(
     (initialCategory as Category) || 'all'
   );
@@ -32,7 +34,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
   // (declared below, after `results`)
   const [collectionFilter, setCollectionFilter] = useState<string>(initialCollection || 'all');
   // Prize / Scale split for CHIX Figures.
-  const [figureTypeFilter, setFigureTypeFilter] = useState<FigureType | 'all'>('all');
+  const [figureTypeFilter, setFigureTypeFilter] = useState<FigureType | 'all'>(initialFigureType);
 
   const results = useMemo(() => {
     let list = [...products];
@@ -167,20 +169,6 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
             ))}
           </div>
 
-          {/* Prize / Scale row, under the categories, for the CHIX collection */}
-          {(collectionFilter === 'all' || collectionFilter === CHIX_SLUG) && (
-            <div className="flex gap-1 flex-wrap mb-3">
-              <Pill label="All Types" active={figureTypeFilter === 'all'} onClick={() => setFigureTypeFilter('all')} />
-              {FIGURE_TYPES.map((t) => (
-                <Pill
-                  key={t.value}
-                  label={t.label}
-                  active={figureTypeFilter === t.value}
-                  onClick={() => setFigureTypeFilter(t.value)}
-                />
-              ))}
-            </div>
-          )}
 
           {/* Filters row */}
           <div className="flex flex-wrap gap-2 items-center">
