@@ -35,14 +35,18 @@ class ImageProxyController extends Controller
             abort(403, 'This URL is not allowed.');
         }
 
-        $response = Http::timeout(8)->get($url);
+        // Don't follow redirects: the host check above only applies to the URL the caller sent.
+        $response = Http::timeout(8)->withoutRedirecting()->get($url);
 
-        if (! $response->successful()) {
+        $contentType = (string) $response->header('Content-Type');
+
+        if (! $response->successful() || ! str_starts_with(strtolower($contentType), 'image/')) {
             abort(502, 'Could not fetch the image.');
         }
 
         return response($response->body())
-            ->header('Content-Type', $response->header('Content-Type', 'image/jpeg'))
+            ->header('Content-Type', $contentType)
+            ->header('X-Content-Type-Options', 'nosniff')
             ->header('Cache-Control', 'public, max-age=86400');
     }
 }

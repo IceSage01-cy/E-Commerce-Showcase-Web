@@ -24,7 +24,7 @@ class CategoryController extends Controller
             'label' => 'required|string|max:80',
             'sublabel' => 'nullable|string|max:120',
             'description' => 'nullable|string|max:300',
-            'image' => 'nullable|string|url|max:2048',
+            'image' => 'nullable|string|url:https|max:2048',
             'accent' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'style' => ['nullable', Rule::in(config('catalog.category_styles'))],
         ];

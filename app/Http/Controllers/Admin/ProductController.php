@@ -28,7 +28,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'salePrice' => 'nullable|numeric|min:0',
             'images' => 'array',
-            'images.*' => 'string|url|max:2048',
+            'images.*' => 'string|url:https|max:2048',
             // Listing type (availability): on-hand / pre-order / new-release.
             'category' => 'required|string|in:on-hand,pre-order,new-release',
             // Main storefront category: any category that exists (managed in Admin -> Categories).

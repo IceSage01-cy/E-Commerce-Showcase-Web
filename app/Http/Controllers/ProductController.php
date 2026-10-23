@@ -2,16 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Support\CatalogCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
+        // Only known values are accepted, so the cache key space stays bounded and
+        // arbitrary strings can't force a full table read per request.
+        $request->validate([
+            'category' => ['nullable', 'string', Rule::in(['on-hand', 'pre-order', 'new-release'])],
+            'collection' => ['nullable', 'string', Rule::in(Category::pluck('slug')->all())],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
         $query = Product::query();
 
         if ($request->filled('category')) {
@@ -27,7 +37,9 @@ class ProductController extends Controller
         }
 
         if ($request->filled('q')) {
-            $term = '%'.$request->string('q').'%';
+            // Escape LIKE wildcards so the search text is matched literally.
+            $escaped = addcslashes($request->string('q')->toString(), '%_\\');
+            $term = '%'.$escaped.'%';
             // PostgreSQL's LIKE is case-sensitive (MySQL/SQLite's is not), so use ILIKE there.
             $like = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
             $query->where(function ($q) use ($term, $like) {

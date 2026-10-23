@@ -4,6 +4,8 @@ import FeaturedProducts from '../components/FeaturedProducts';
 import ChixFiguresSection from '../components/ChixFiguresSection';
 import NewArrivals from '../components/NewArrivals';
 import CategoriesSection from '../components/CategoriesSection';
+import CategoryMarquee from '../components/CategoryMarquee';
+import { FALLBACK_CATEGORIES } from '../data/products';
 
 interface HomePageProps {
   products: Product[];
@@ -17,6 +19,7 @@ export default function HomePage({ products, categories, onView, onNavigate, onA
   return (
     <div>
       <HeroSlider onNavigate={onNavigate} />
+      <CategoryMarquee categories={categories.length ? categories : FALLBACK_CATEGORIES} onNavigate={onNavigate} />
       <FeaturedProducts products={products} onView={onView} onAddToCart={onAddToCart} />
       <ChixFiguresSection products={products} onView={onView} onNavigate={onNavigate} />
       <NewArrivals products={products} onView={onView} onAddToCart={onAddToCart} />
