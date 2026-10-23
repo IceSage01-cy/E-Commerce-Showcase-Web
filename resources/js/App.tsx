@@ -141,7 +141,8 @@ export default function App() {
 
 
   return (
-    <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
+    // The full-screen hero is wider than the column, so this page-wide wrapper stops it causing a sideways scroll.
+    <div className="overflow-x-clip" style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
       {/* The site is a fixed-width column (1280px), centred in the window. Narrower windows use the full width. */}
       <div className="mx-auto w-full max-w-[1280px] min-h-screen">
       <Header

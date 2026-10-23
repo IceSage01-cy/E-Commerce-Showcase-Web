@@ -15,6 +15,10 @@ interface HeroSliderProps {
   onNavigate: (page: string) => void;
 }
 
+// The hero runs edge to edge and fills the screen height. It breaks out of the 1280px column the rest of the site sits in.
+const FULL_SCREEN = 'relative w-screen h-svh min-h-[520px]';
+const FULL_SCREEN_STYLE = { marginLeft: 'calc(50% - 50vw)' };
+
 export default function HeroSlider({ onNavigate }: HeroSliderProps) {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -47,8 +51,8 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
     if (loaded) return null;
     return (
       <div
-        className="w-full animate-pulse"
-        style={{ height: 'min(72vh, 580px)', backgroundColor: 'var(--color-bg-secondary)' }}
+        className={`${FULL_SCREEN} animate-pulse`}
+        style={{ ...FULL_SCREEN_STYLE, backgroundColor: 'var(--color-bg-secondary)' }}
       />
     );
   }
@@ -56,7 +60,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
   const slide = slides[current];
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: 'min(72vh, 580px)' }}>
+    <div className={`${FULL_SCREEN} overflow-hidden`} style={FULL_SCREEN_STYLE}>
       {/* Slides */}
       {slides.map((s, i) => (
         <div
