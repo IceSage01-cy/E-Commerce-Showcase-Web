@@ -56,7 +56,7 @@ export default function HomePage({ products, categories, covers, onView, onNavig
       <FeaturedProducts products={products} onView={onView} onAddToCart={onAddToCart} onNavigate={onNavigate} />
       <CategoryTiles categories={categories} onNavigate={onNavigate} />
       <ChixFiguresSection products={products} onView={onView} onNavigate={onNavigate} />
-      <NewArrivals products={products} onView={onView} onAddToCart={onAddToCart} />
+      <NewArrivals products={products} onView={onView} onAddToCart={onAddToCart} onNavigate={onNavigate} />
       <NendoroidSection products={products} onView={onView} onAddToCart={onAddToCart} onNavigate={onNavigate} />
     </div>
   );

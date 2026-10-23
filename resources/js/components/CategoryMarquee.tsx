@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { hexToRgba } from '../lib/color';
 
 /** One card in the strip: a label, a picture and an accent colour. `key` is passed back on click. */
@@ -16,6 +16,8 @@ interface CategoryMarqueeProps {
 
 const CARD_W = 172;
 const CARD_H = 198; // regular hexagon: height = width * 2 / sqrt(3)
+const SECONDS_PER_CARD = 5; // how long one card takes to slide past: a clear, steady pace
+const MIN_CARDS_PER_HALF = 8; // one half must be wider than the column, or the loop shows a gap
 const HEX = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
 // The strip is two identical halves; moving one half's width gives a seamless loop.
@@ -80,8 +82,9 @@ const MARQUEE_CSS = `
   }
 }
 
+/* The strip keeps moving for everyone, including people whose system asks for less motion; they can pause it
+   with the button. Only the hover lift is switched off here. */
 @media (prefers-reduced-motion: reduce) {
-  .category-marquee-track { animation: none !important; }
   .hex-card, .hex-card:hover { transform: none; }
   .hex-card:hover .hex-image { transform: none; }
 }
@@ -159,13 +162,15 @@ function HexCard({ cat, onClick, duplicate }: { cat: StripItem; onClick: () => v
 }
 
 export default function CategoryMarquee({ items, onSelect }: CategoryMarqueeProps) {
+  const [paused, setPaused] = useState(false);
   if (items.length === 0) return null;
 
-  // Repeat the list so one half is wider than any screen, then duplicate that half for the seamless loop.
-  const half = [0, 1, 2].flatMap((copy) =>
+  // Repeat the list until one half is wider than the strip, then duplicate that half for the seamless loop.
+  const copies = Math.max(3, Math.ceil(MIN_CARDS_PER_HALF / items.length));
+  const half = Array.from({ length: copies }).flatMap((_, copy) =>
     items.map((cat) => ({ key: `${copy}-${cat.key}`, cat })),
   );
-  const duration = Math.max(30, half.length * 8);
+  const duration = half.length * SECONDS_PER_CARD;
 
   const renderHalf = (hidden: boolean) => (
     // The duplicate half stays clickable (inert would swallow clicks on the visible cards),
@@ -178,23 +183,38 @@ export default function CategoryMarquee({ items, onSelect }: CategoryMarqueeProp
   );
 
   return (
-    <section
-      className="category-marquee relative w-full overflow-hidden py-10"
-      style={{
-        borderBottom: '1px solid #1A1A20',
-        maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
-        WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
-      }}
-    >
+    <div className="relative">
       <style>{MARQUEE_CSS}</style>
-      {/* Animation lives in the stylesheet so the hover rule can pause it; an inline `animation` would override that. */}
-      <div
-        className="category-marquee-track flex w-max"
-        style={{ '--marquee-duration': `${duration}s` } as CSSProperties}
+      {/* Stays outside the faded edges so it is always fully visible. */}
+      <button
+        type="button"
+        onClick={() => setPaused((p) => !p)}
+        className="absolute right-4 top-3 z-10 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors hover:text-[#F0F0F4]"
+        style={{ fontFamily: 'Outfit, sans-serif', backgroundColor: 'rgba(20,20,24,0.85)', border: '1px solid #222228', color: '#A0A0AC' }}
       >
-        {renderHalf(false)}
-        {renderHalf(true)}
-      </div>
-    </section>
+        {paused ? 'Play' : 'Pause'}
+      </button>
+      <section
+        className="category-marquee relative w-full overflow-hidden py-10"
+        style={{
+          borderBottom: '1px solid #1A1A20',
+          maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+        }}
+      >
+        {/* Animation lives in the stylesheet so the hover rule can pause it; an inline `animation` would override that. */}
+        <div
+          className="category-marquee-track flex w-max"
+          style={{
+            '--marquee-duration': `${duration}s`,
+            // Only set when the button paused it; an inline `running` would cancel the hover pause.
+            animationPlayState: paused ? 'paused' : undefined,
+          } as CSSProperties}
+        >
+          {renderHalf(false)}
+          {renderHalf(true)}
+        </div>
+      </section>
+    </div>
   );
 }
