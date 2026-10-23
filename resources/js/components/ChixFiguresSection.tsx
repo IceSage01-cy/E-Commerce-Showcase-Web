@@ -39,33 +39,31 @@ export default function ChixFiguresSection({ products = [], onView, onNavigate }
   const go = (dir: 1 | -1) => setIndex((i) => (i + dir + count) % count);
 
   return (
-    <section className="py-12 px-4" style={{ borderTop: '1px solid #1A1A20' }}>
+    <section className="py-16 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <p style={{ color: ACCENT, fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">
-              Our CHIX Line
-            </p>
-            <h2 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl sm:text-3xl font-800">
-              CHIX Figures
-            </h2>
-          </div>
-          <button
-            onClick={() => onNavigate(CHIX_SLUG)}
-            style={{ color: '#80808C', fontFamily: 'Inter, sans-serif' }}
-            className="text-sm font-500 flex items-center gap-1.5 hover:text-[#F0F0F4] transition-colors"
-          >
-            View all
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
+        <SectionHeading
+          index="03"
+          kicker="Our CHIX Line"
+          title="CHIX Figures"
+          accent={ACCENT}
+          action={
+            <button
+              onClick={() => onNavigate(CHIX_SLUG)}
+              style={{ color: '#F0F0F4', fontFamily: 'Outfit, sans-serif' }}
+              className="hidden sm:flex items-center gap-2 text-sm font-700 uppercase tracking-wider hover:text-[#22C55E] transition-colors"
+            >
+              View all
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          }
+        />
 
         <div
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
-          style={{ backgroundColor: '#141418', border: '1px solid #222228', borderRadius: '1rem', position: 'relative', overflow: 'hidden' }}
+          style={{ backgroundColor: '#141418', border: '1px solid rgba(34,197,94,0.35)', borderRadius: '0.25rem', position: 'relative', overflow: 'hidden', boxShadow: '0 0 40px rgba(34,197,94,0.12)' }}
         >
           {/* Slides */}
           <div style={{ display: 'flex', transform: `translateX(-${index * 100}%)`, transition: 'transform 0.5s ease' }}>

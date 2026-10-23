@@ -113,8 +113,8 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
             </div>
 
             <h1
-              style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 1.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl font-800 mb-3"
+              style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.92 }}
+              className="text-5xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight mb-4"
             >
               {slide.title}
             </h1>
@@ -132,8 +132,9 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
                 background: slide.accent,
                 fontFamily: 'Outfit, sans-serif',
                 color: '#FFFFFF',
+                clipPath: 'polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%)',
               }}
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-base font-600 transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-3 px-9 py-4 text-base font-800 uppercase tracking-wider transition-all hover:-translate-y-0.5 hover:brightness-110 hover:tracking-[0.12em] active:scale-[0.98]"
             >
               {slide.cta}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
