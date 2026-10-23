@@ -5,12 +5,12 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import SearchPage from './pages/SearchPage';
-import ProductCard from './components/ProductCard';
 // Loaded on demand: the cart page pulls in the receipt image library, which the rest of the shop doesn't need.
 const CartPage = lazy(() => import('./pages/CartPage'));
 import ChixPage from './pages/ChixPage';
 import NendoroidsPage from './pages/NendoroidsPage';
 import JapanNewArrivalsPage from './pages/JapanNewArrivalsPage';
+import PinasOnHandPage from './pages/PinasOnHandPage';
 import AnimeBrowser from './components/AnimeBrowser';
 import SectionHeading from './components/SectionHeading';
 import type { Product, CategoryInfo } from './data/products';
@@ -109,13 +109,6 @@ export default function App() {
     [categories],
   );
 
-  // Pinas On Hand: the products we hold locally, newest first.
-  const sortedNew = useMemo(
-    () => products
-      .filter((p) => p.category === 'on-hand')
-      .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()),
-    [products],
-  );
 
   return (
     <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
@@ -228,17 +221,7 @@ export default function App() {
           <JapanNewArrivalsPage products={products} covers={animeCovers} onView={viewProduct} onAddToCart={addToCart} />
         )}
         {route.type === 'new-arrivals' && (
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="mb-8">
-              <p style={{ color: '#22C55E', fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">Local stock</p>
-              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-5xl sm:text-6xl font-bold uppercase tracking-tight">Pinas On Hand</h1>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-              {sortedNew.map((p) => (
-                <ProductCard key={p.id} product={p} onView={viewProduct} onAddToCart={addToCart} size="sm" />
-              ))}
-            </div>
-          </div>
+          <PinasOnHandPage products={products} covers={animeCovers} onView={viewProduct} onAddToCart={addToCart} />
         )}
         {route.type === 'cart' && (
           <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-20" />}>
