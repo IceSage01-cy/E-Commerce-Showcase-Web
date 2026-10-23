@@ -404,8 +404,11 @@ export default function CartPage({
             style={{
               fontFamily: 'Outfit, sans-serif',
               color: S.text,
-              fontSize: 26,
-              fontWeight: 800,
+              fontSize: 40,
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.01em',
+              lineHeight: 0.95,
               marginBottom: 4,
             }}
           >
@@ -628,8 +631,11 @@ export default function CartPage({
             style={{
               fontFamily: 'Outfit, sans-serif',
               color: S.text,
-              fontSize: 26,
-              fontWeight: 800,
+              fontSize: 40,
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.01em',
+              lineHeight: 0.95,
               marginBottom: 4,
             }}
           >
@@ -764,8 +770,11 @@ export default function CartPage({
             style={{
               fontFamily: 'Outfit, sans-serif',
               color: S.text,
-              fontSize: 26,
-              fontWeight: 800,
+              fontSize: 40,
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.01em',
+              lineHeight: 0.95,
               marginBottom: 4,
             }}
           >

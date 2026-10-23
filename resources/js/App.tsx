@@ -169,7 +169,7 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="mb-8">
               <p style={{ color: '#22C55E', fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">Just Added</p>
-              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-3xl font-800">New Arrivals</h1>
+              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-5xl sm:text-6xl font-black uppercase tracking-tight">New Arrivals</h1>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
               {sortedNew.map((p) => (

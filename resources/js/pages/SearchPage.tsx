@@ -140,7 +140,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
           </form>
 
           {collectionFilter !== 'all' && (
-            <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl font-800 mb-4">
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-4xl sm:text-5xl font-black uppercase tracking-tight mb-4">
               {categories.find((c) => c.slug === collectionFilter)?.label ?? 'Shop'}
             </h1>
           )}

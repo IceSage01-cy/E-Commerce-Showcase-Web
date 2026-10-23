@@ -188,8 +188,8 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
                 {product.series}
               </p>
               <h1
-                style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 1.2 }}
-                className="text-2xl sm:text-3xl font-800"
+                style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 1 }}
+                className="text-3xl sm:text-5xl font-black uppercase tracking-tight"
               >
                 {product.name}
               </h1>
@@ -202,7 +202,7 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
                   color: product.salePrice ? '#FF2D78' : '#F0F0F4',
                   fontFamily: 'Outfit, sans-serif',
                 }}
-                className="text-3xl font-800"
+                className="text-4xl font-black"
               >
                 {formatPrice(product.salePrice ?? product.price)}
               </span>
@@ -337,8 +337,8 @@ export default function ProductDetailPage({ productId, onNavigate, onView, onAdd
           <div className="mt-16">
             <div style={{ borderTop: '1px solid #1A1A20' }} className="pt-10">
               <h2
-                style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }}
-                className="text-xl font-700 mb-6"
+                style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }}
+                className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-6"
               >
                 You Might Also Like
               </h2>

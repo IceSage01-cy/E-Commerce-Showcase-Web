@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
 import type { Product } from '../data/products';
 import { getStockStyle, formatPrice } from '../data/products';
+import { hexToRgba } from './CategoriesSection';
 
 interface ProductCardProps {
   product: Product;
@@ -28,12 +29,12 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
       onMouseLeave={() => setHovered(false)}
       style={{
         backgroundColor: '#141418',
-        border: hovered ? '1px solid #333340' : '1px solid #222228',
-        borderRadius: '0.875rem',
+        border: `1px solid ${hovered ? catColor.text : '#222228'}`,
+        borderRadius: '0.25rem',
         cursor: 'pointer',
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-        transition: 'all 0.22s ease',
-        boxShadow: hovered ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        boxShadow: hovered ? `0 18px 40px rgba(0,0,0,0.5), 0 0 28px ${hexToRgba(catColor.text, 0.35)}` : 'none',
       }}
       className="flex flex-col overflow-hidden group"
     >
@@ -135,8 +136,8 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
       <div className="p-3 flex flex-col gap-1.5">
         <div>
           <p
-            style={{ color: '#50505C', fontFamily: 'Inter, sans-serif', fontSize: 11 }}
-            className="font-500 uppercase tracking-wider mb-0.5"
+            style={{ color: catColor.text, fontFamily: 'Outfit, sans-serif', fontSize: 11 }}
+            className="font-800 uppercase tracking-[0.18em] mb-0.5"
           >
             {product.series}
           </p>
@@ -144,10 +145,10 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
             style={{
               color: '#F0F0F4',
               fontFamily: 'Outfit, sans-serif',
-              fontSize: size === 'lg' ? 15 : 13,
-              lineHeight: 1.3,
+              fontSize: size === 'lg' ? 17 : 14,
+              lineHeight: 1.15,
             }}
-            className="font-600 line-clamp-2"
+            className="font-black uppercase tracking-tight line-clamp-2"
           >
             {product.name}
           </h3>
@@ -186,7 +187,7 @@ function ProductCard({ product, onView, onAddToCart, size = 'md' }: ProductCardP
               fontFamily: 'Outfit, sans-serif',
               fontSize: size === 'lg' ? 17 : 15,
             }}
-            className="font-700"
+            className="font-black"
           >
             {formatPrice(product.salePrice ?? product.price)}
           </span>

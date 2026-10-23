@@ -61,7 +61,7 @@ export default function ChixPage({ products, categories, onNavigate, onView, onA
         <>
           <div className="mb-8">
             <p style={{ color: accent, fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">Our CHIX Line</p>
-            <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-3xl font-800">{title}</h1>
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-5xl sm:text-6xl font-black uppercase tracking-tight">{title}</h1>
             <p style={{ color: '#80808C', fontFamily: 'Inter, sans-serif', fontSize: 14 }} className="mt-2">What are you looking for?</p>
           </div>
 
@@ -77,7 +77,7 @@ export default function ChixPage({ products, categories, onNavigate, onView, onA
           <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
             <div>
               <p style={{ color: accent, fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">{title}</p>
-              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-3xl font-800">{active?.label}</h1>
+              <h1 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-5xl sm:text-6xl font-black uppercase tracking-tight">{active?.label}</h1>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {FIGURE_TYPES.map((t) => (
@@ -157,7 +157,7 @@ function TypeCard({ label, blurb, count, image, accent, onClick }: { label: stri
         <span style={{ color: accent, fontFamily: 'Outfit, sans-serif', fontSize: 11 }} className="font-700 uppercase tracking-widest mb-1">
           {count} {count === 1 ? 'item' : 'items'}
         </span>
-        <h2 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4' }} className="text-2xl font-800">{label}</h2>
+        <h2 style={{ fontFamily: 'Outfit, sans-serif', color: '#F0F0F4', lineHeight: 0.95 }} className="text-3xl font-black uppercase tracking-tight">{label}</h2>
         <p style={{ color: '#B0B0BC', fontFamily: 'Inter, sans-serif', fontSize: 13 }} className="mt-1 max-w-sm">{blurb}</p>
         <span style={{ color: accent, fontFamily: 'Outfit, sans-serif', fontSize: 13 }} className="font-700 mt-3">Browse →</span>
       </div>
