@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { CategoryInfo } from '../data/products';
 import { hexToRgba } from './CategoriesSection';
 
@@ -17,6 +18,7 @@ const MARQUEE_CSS = `
   from { transform: translateX(-50%); }
   to { transform: translateX(0); }
 }
+.category-marquee-track { animation: category-marquee var(--marquee-duration) linear infinite; }
 .category-marquee:hover .category-marquee-track { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .category-marquee-track { animation: none !important; }
@@ -124,9 +126,10 @@ export default function CategoryMarquee({ categories, onNavigate }: CategoryMarq
       }}
     >
       <style>{MARQUEE_CSS}</style>
+      {/* Animation lives in the stylesheet so the hover rule can pause it; an inline `animation` would override that. */}
       <div
         className="category-marquee-track flex w-max"
-        style={{ animation: `category-marquee ${duration}s linear infinite` }}
+        style={{ '--marquee-duration': `${duration}s` } as CSSProperties}
       >
         {renderHalf(false)}
         {renderHalf(true)}
