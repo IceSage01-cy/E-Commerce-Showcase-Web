@@ -112,6 +112,8 @@ export default function App() {
 
   return (
     <div style={{ backgroundColor: '#0A0A0B', minHeight: '100vh' }}>
+      {/* The site is a fixed-width column (1280px), centred in the window. Narrower windows use the full width. */}
+      <div className="mx-auto w-full max-w-[1280px] min-h-screen">
       <Header
         categories={navCategories}
         onSearch={(q) => handleSearch(q)}
@@ -272,6 +274,7 @@ export default function App() {
           </span>
         </div>
       )}
+      </div>
     </div>
   );
 }
