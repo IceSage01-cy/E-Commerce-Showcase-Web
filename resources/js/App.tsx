@@ -31,6 +31,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ type: 'home' });
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  // Series name => cover picture URL (only series that have one).
+  const [animeCovers, setAnimeCovers] = useState<Record<string, string>>({});
   const [productsLoading, setProductsLoading] = useState(true);
   const [cart, setCart] = useState<string[]>([]);
   const [cartToast, setCartToast] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export default function App() {
   useEffect(() => {
     // Main categories + their admin-managed background pictures. The page works without them (fallback tiles).
     axios.get('/api/categories').then((res) => setCategories(res.data)).catch(() => {});
+    axios.get('/api/anime-covers').then((res) => setAnimeCovers(res.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -130,7 +133,7 @@ export default function App() {
             Setting the table…
           </div>
         ) : route.type === 'home' && (
-          <HomePage products={products} categories={navCategories} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
+          <HomePage products={products} categories={navCategories} covers={animeCovers} onView={viewProduct} onNavigate={navigate} onAddToCart={addToCart} />
         )}
         {route.type === 'product' && (
           <ProductDetailPage
@@ -190,6 +193,22 @@ export default function App() {
         )}
         {route.type === 'anime' && (
           <div className="max-w-7xl mx-auto px-4 py-8">
+            {/* The series cover comes first, above its characters. */}
+            {animeCovers[route.series] && (
+              <div className="relative w-full overflow-hidden rounded-2xl mb-8" style={{ aspectRatio: '21 / 9', border: '1px solid #222228' }}>
+                <img src={animeCovers[route.series]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(to top, rgba(10,10,11,0.9) 0%, rgba(10,10,11,0.1) 60%, transparent 100%)' }}
+                />
+                <p
+                  style={{ fontFamily: 'Outfit, sans-serif', color: '#FFFFFF', textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}
+                  className="absolute bottom-4 left-5 text-3xl sm:text-5xl font-bold uppercase tracking-tight"
+                >
+                  {route.series}
+                </p>
+              </div>
+            )}
             <SectionHeading kicker="Anime" title={route.series} accent="#FF2D78" />
             <AnimeBrowser
               key={route.series}
@@ -198,6 +217,7 @@ export default function App() {
               onAddToCart={addToCart}
               rootLabel={route.series}
               fixedSeries={route.series}
+              covers={animeCovers}
             />
           </div>
         )}

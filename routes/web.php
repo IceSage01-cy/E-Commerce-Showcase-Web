@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AnimeCoverController as AdminAnimeCoverController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UploadController as AdminUploadController;
+use App\Http\Controllers\AnimeCoverController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ImageProxyController;
@@ -22,6 +24,7 @@ Route::middleware('throttle:120,1')->group(function () {
     Route::get('/api/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/api/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/api/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/api/anime-covers', [AnimeCoverController::class, 'index'])->name('anime-covers.index');
 });
 
 // Used by the receipt "Download as Image" button to fetch R2 images
@@ -67,5 +70,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::post('/api/uploads', [AdminUploadController::class, 'store'])->name('uploads.store');
+
+        Route::get('/api/anime-covers', [AdminAnimeCoverController::class, 'index'])->name('anime-covers.index');
+        Route::put('/api/anime-covers', [AdminAnimeCoverController::class, 'update'])->name('anime-covers.update');
     });
 });

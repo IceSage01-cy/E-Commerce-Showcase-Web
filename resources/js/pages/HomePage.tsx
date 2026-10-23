@@ -14,6 +14,8 @@ import { CHIX_SLUG } from '../data/products';
 interface HomePageProps {
   products: Product[];
   categories: CategoryInfo[];
+  /** Series name => cover picture; a series with a cover uses it on the strip. */
+  covers: Record<string, string>;
   onView: (id: string) => void;
   onNavigate: (page: string) => void;
   onAddToCart: (id: string) => void;
@@ -24,7 +26,7 @@ const STRIP_ACCENTS = ['#FF2D78', '#A78BFA', '#F59E0B', '#22C55E', '#38BDF8'];
 const STRIP_LENGTH = 10;
 
 /** One strip card per anime series, the STRIP_LENGTH with the most products; each opens that anime's page. */
-function animeStrip(products: Product[]): StripItem[] {
+function animeStrip(products: Product[], covers: Record<string, string>): StripItem[] {
   const bySeries = new Map<string, { count: number; image: string | null }>();
   for (const p of products) {
     // CHIX has its own product lines, so they are not anime series.
@@ -39,13 +41,13 @@ function animeStrip(products: Product[]): StripItem[] {
     .map(([series, entry], i) => ({
       key: series,
       label: series,
-      image: entry.image,
+      image: covers[series] ?? entry.image,
       accent: STRIP_ACCENTS[i % STRIP_ACCENTS.length],
     }));
 }
 
-export default function HomePage({ products, categories, onView, onNavigate, onAddToCart }: HomePageProps) {
-  const strip = useMemo(() => animeStrip(products), [products]);
+export default function HomePage({ products, categories, covers, onView, onNavigate, onAddToCart }: HomePageProps) {
+  const strip = useMemo(() => animeStrip(products, covers), [products, covers]);
 
   return (
     <div>

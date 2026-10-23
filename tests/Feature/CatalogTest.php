@@ -47,6 +47,28 @@ class CatalogTest extends TestCase
             ->assertJsonPath('errors.name.0', 'A listing with this name, series and condition already exists.');
     }
 
+    public function test_an_anime_series_cover_is_saved_shown_publicly_and_can_be_cleared(): void
+    {
+        $this->admin()->postJson('/admin/api/products', $this->payload(['name' => 'Series Figure', 'series' => 'Cover Series']))->assertCreated();
+
+        $this->admin()->getJson('/admin/api/anime-covers')->assertOk()
+            ->assertJsonFragment(['series' => 'Cover Series', 'image' => null]);
+
+        $this->admin()->putJson('/admin/api/anime-covers', ['series' => 'Cover Series', 'image' => 'https://example.com/cover.jpg'])
+            ->assertOk();
+        $this->getJson('/api/anime-covers')->assertOk()
+            ->assertJsonPath('Cover Series', 'https://example.com/cover.jpg');
+
+        $this->admin()->putJson('/admin/api/anime-covers', ['series' => 'Cover Series', 'image' => null])->assertOk();
+        $this->getJson('/api/anime-covers')->assertOk()->assertJsonMissing(['Cover Series' => 'https://example.com/cover.jpg']);
+    }
+
+    public function test_an_anime_cover_must_be_an_https_link(): void
+    {
+        $this->admin()->putJson('/admin/api/anime-covers', ['series' => 'Cover Series', 'image' => 'http://example.com/cover.jpg'])
+            ->assertStatus(422)->assertJsonValidationErrors('image');
+    }
+
     // ── Seeders ────────────────────────────────────────────────────────
 
     public function test_seeding_repeatedly_never_duplicates_anything(): void

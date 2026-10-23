@@ -24,8 +24,10 @@ function AdminRoot() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
+  const [animeCovers, setAnimeCovers] = useState<{ series: string; image: string | null }[]>([]);
 
   useEffect(() => {
+    axios.get('/admin/api/anime-covers').then((res) => setAnimeCovers(res.data));
     axios.get('/admin/api/banners').then((res) => setBanners(res.data));
     axios.get('/admin/api/products').then((res) => setProducts(res.data));
     axios.get('/admin/api/categories').then((res) => setCategories(res.data));
@@ -159,6 +161,18 @@ function AdminRoot() {
     setBanners((prev) => prev.map((b) => (b.id === id ? res.data : b)));
   }
 
+  /** Set (or clear, with null) the cover picture of one anime series. Returns an error message, or null when saved. */
+  async function handleSaveAnimeCover(series: string, image: string | null): Promise<string | null> {
+    try {
+      await axios.put('/admin/api/anime-covers', { series, image });
+      setAnimeCovers((prev) => prev.map((c) => (c.series === series ? { ...c, image } : c)));
+      return null;
+    } catch (err) {
+      console.error('Failed to save anime cover', err);
+      return apiError(err, 'Could not save the cover. Please try again.');
+    }
+  }
+
   async function handleDeleteBanner(id: string) {
     await axios.delete(`/admin/api/banners/${id}`);
     setBanners((prev) => prev.filter((b) => b.id !== id));
@@ -181,6 +195,8 @@ function AdminRoot() {
       onAddBanner={handleAddBanner}
       onEditBanner={handleEditBanner}
       onDeleteBanner={handleDeleteBanner}
+      animeCovers={animeCovers}
+      onSaveAnimeCover={handleSaveAnimeCover}
       onNavigate={(page) => {
         if (page === 'home') window.location.href = '/';
       }}

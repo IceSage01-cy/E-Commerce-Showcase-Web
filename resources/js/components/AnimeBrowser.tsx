@@ -18,6 +18,8 @@ interface AnimeBrowserProps {
   rootLabel?: string;
   /** Start inside this anime (the anime page): the series step is skipped and the top crumb goes back to its characters. */
   fixedSeries?: string;
+  /** Series name => cover picture. A series with a cover shows it on its tile instead of a figure's photo. */
+  covers?: Record<string, string>;
 }
 
 interface GroupTile {
@@ -43,7 +45,7 @@ function groupBy(products: Product[], key: keyof Product, labelOf: (value: strin
  * Drill-down browser: [split] > series (anime) > character > figures.
  * The split level is only shown when a `split` is given (CHIX and Scale Figures).
  */
-export default function AnimeBrowser({ products, onView, onAddToCart, split, rootLabel = 'All Anime', fixedSeries }: AnimeBrowserProps) {
+export default function AnimeBrowser({ products, onView, onAddToCart, split, rootLabel = 'All Anime', fixedSeries, covers }: AnimeBrowserProps) {
   const [splitValue, setSplitValue] = useState<string | null>(null);
   const [series, setSeries] = useState<string | null>(fixedSeries ?? null);
   const [character, setCharacter] = useState<string | null>(null);
@@ -235,7 +237,7 @@ export default function AnimeBrowser({ products, onView, onAddToCart, split, roo
           {seriesTiles.map((t) => (
             <Tile
               key={t.value}
-              tile={t}
+              tile={{ ...t, image: covers?.[t.value] ?? t.image }}
               sublabel={t.count === 1 ? 'figure' : 'figures'}
               onClick={() => setSeries(t.value)}
             />

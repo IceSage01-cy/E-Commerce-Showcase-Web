@@ -3,6 +3,7 @@ import type { Product, Category, Condition, Collection, CategoryInfo, BulkAction
 import { getStockStyle, formatPrice, CONDITIONS, collectionLabel, normalizeCondition, CHIX_SLUG, SCALE_SLUG, FIGURE_TYPES } from '../data/products';
 import BannersTab, { type Banner, type BannerFormData } from '../components/BannersTab';
 import CategoriesTab, { type CategoryFormData } from '../components/CategoriesTab';
+import AnimeCoversTab, { type AnimeCover } from '../components/AnimeCoversTab';
 import ImageDropzone from '../components/ImageDropzone';
 
 interface AdminPageProps {
@@ -23,9 +24,11 @@ interface AdminPageProps {
   onAddBanner: (b: BannerFormData) => void;
   onEditBanner: (id: string, b: BannerFormData) => void;
   onDeleteBanner: (id: string) => void;
+  animeCovers: AnimeCover[];
+  onSaveAnimeCover: (series: string, image: string | null) => Promise<string | null>;
 }
 
-type Tab = 'dashboard' | 'products' | 'categories' | 'banners' | 'orders';
+type Tab = 'dashboard' | 'products' | 'categories' | 'banners' | 'anime' | 'orders';
 
 /** Listing type = how the item is sold. (The main storefront category is `collection`.) */
 const CATEGORIES: Category[] = ['on-hand', 'pre-order', 'new-release'];
@@ -63,6 +66,7 @@ const emptyForm = (collection: Collection = ''): Omit<Product, 'id'> => ({
 export default function AdminPage({
   products, onAdd, onEdit, onDelete, onToggleStock, onToggleFeatured, onBulk, onNavigate,
   categories, onAddCategory, onEditCategory, onDeleteCategory, banners, onAddBanner, onEditBanner, onDeleteBanner,
+  animeCovers, onSaveAnimeCover,
 }: AdminPageProps) {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
@@ -247,6 +251,16 @@ export default function AdminPage({
           <rect x="1.5" y="3" width="13" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.25" />
           <path d="M1.5 10.5L5.5 7L8.5 9.5L11 7L14.5 10" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
           <circle cx="5" cy="5.5" r="1" fill="currentColor" />
+        </svg>
+      ),
+    },
+    {
+      id: 'anime',
+      label: 'Anime covers',
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1.5" y="2" width="13" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.25" />
+          <path d="M1.5 9.5L5 6.5L8 9L10.5 7L14.5 10" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
         </svg>
       ),
     },
@@ -789,6 +803,9 @@ export default function AdminPage({
               onDelete={onDeleteBanner}
             />
           </div>
+
+          {/* ── ANIME COVERS ── */}
+          {tab === 'anime' && <AnimeCoversTab covers={animeCovers} onSave={onSaveAnimeCover} />}
 
           {/* ── ORDERS ── */}
           {tab === 'orders' && (
