@@ -113,6 +113,28 @@ export default function AdminPage({
     });
   }, [products, search, collectionFilter, featuredFilter, figureFilter]);
 
+  // Form suggestions: the series that already exist, and the characters of the series typed so far.
+  // The storefront groups on the exact text, so reusing these spellings keeps products under one tile.
+  const seriesOptions = useMemo(
+    () => Array.from(new Set(products.map((p) => p.series.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [products]
+  );
+  const characterOptions = useMemo(() => {
+    const series = form.series.trim().toLowerCase();
+    if (!series) return [];
+    const names = products.filter((p) => p.series.trim().toLowerCase() === series).map((p) => p.character.trim());
+    return Array.from(new Set(names.filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  }, [products, form.series]);
+  // A typed value that differs from an existing one only by letter case would become a separate tile.
+  const seriesTyped = form.series.trim();
+  const seriesNearMatch = seriesTyped && !seriesOptions.includes(seriesTyped)
+    ? seriesOptions.find((s) => s.toLowerCase() === seriesTyped.toLowerCase())
+    : undefined;
+  const characterTyped = form.character.trim();
+  const characterNearMatch = characterTyped && !characterOptions.includes(characterTyped)
+    ? characterOptions.find((c) => c.toLowerCase() === characterTyped.toLowerCase())
+    : undefined;
+
   // Only count ticks for products that still exist (a delete elsewhere can't leave a phantom selection).
   const selectedIds = useMemo(() => products.filter((p) => selected.has(p.id)).map((p) => p.id), [products, selected]);
   const allSelected = filteredProducts.length > 0 && filteredProducts.every((p) => selected.has(p.id));
@@ -891,10 +913,50 @@ export default function AdminPage({
                 </Field>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Series *">
-                    <input style={inputStyle} value={form.series} onChange={(e) => set('series', e.target.value)} placeholder="e.g. Vocaloid" />
+                    <input
+                      style={inputStyle}
+                      value={form.series}
+                      onChange={(e) => set('series', e.target.value)}
+                      placeholder="e.g. Vocaloid"
+                      list="series-options"
+                      autoComplete="off"
+                    />
+                    <datalist id="series-options">
+                      {seriesOptions.map((s) => <option key={s} value={s} />)}
+                    </datalist>
+                    {seriesNearMatch && (
+                      <button
+                        type="button"
+                        onClick={() => set('series', seriesNearMatch)}
+                        style={{ color: '#F59E0B', fontFamily: 'Inter, sans-serif', fontSize: 11 }}
+                        className="mt-1 text-left hover:opacity-80"
+                      >
+                        Did you mean “{seriesNearMatch}”? Click to use it (names are case-sensitive).
+                      </button>
+                    )}
                   </Field>
                   <Field label="Character">
-                    <input style={inputStyle} value={form.character} onChange={(e) => set('character', e.target.value)} placeholder="e.g. Hatsune Miku" />
+                    <input
+                      style={inputStyle}
+                      value={form.character}
+                      onChange={(e) => set('character', e.target.value)}
+                      placeholder="e.g. Hatsune Miku"
+                      list="character-options"
+                      autoComplete="off"
+                    />
+                    <datalist id="character-options">
+                      {characterOptions.map((c) => <option key={c} value={c} />)}
+                    </datalist>
+                    {characterNearMatch && (
+                      <button
+                        type="button"
+                        onClick={() => set('character', characterNearMatch)}
+                        style={{ color: '#F59E0B', fontFamily: 'Inter, sans-serif', fontSize: 11 }}
+                        className="mt-1 text-left hover:opacity-80"
+                      >
+                        Did you mean “{characterNearMatch}”? Click to use it (names are case-sensitive).
+                      </button>
+                    )}
                   </Field>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
