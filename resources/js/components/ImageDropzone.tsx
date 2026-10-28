@@ -96,7 +96,7 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
         <label
           style={{
             color: 'var(--color-text-muted)',
-            fontFamily: 'Karla, sans-serif',
+            fontFamily: 'Inter, sans-serif',
             fontSize: 11,
             display: 'block',
             marginBottom: 5,
@@ -144,7 +144,7 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
                     fontSize: 8,
                     padding: '1px 4px',
                     borderRadius: 4,
-                    fontFamily: 'Karla, sans-serif',
+                    fontFamily: 'Inter, sans-serif',
                   }}
                 >
                   Cover
@@ -193,10 +193,10 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
             hidden
             onChange={(e) => e.target.files && uploadFiles(e.target.files)}
           />
-          <p style={{ color: 'var(--color-text-muted)', fontFamily: 'Karla, sans-serif', fontSize: 13 }}>
+          <p style={{ color: 'var(--color-text-muted)', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>
             {uploading ? 'Uploading…' : 'Drag photos here, or click to browse'}
           </p>
-          <p style={{ color: 'var(--color-text-faint)', fontFamily: 'Karla, sans-serif', fontSize: 11 }} className="mt-1">
+          <p style={{ color: 'var(--color-text-faint)', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="mt-1">
             JPG or PNG, up to 5MB each
           </p>
         </div>
@@ -222,7 +222,7 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
               backgroundColor: 'var(--color-bg)',
               border: '1px solid var(--color-border)',
               color: 'var(--color-text)',
-              fontFamily: 'Karla, sans-serif',
+              fontFamily: 'Inter, sans-serif',
               fontSize: 12,
               borderRadius: '0.5rem',
               padding: '7px 10px',
@@ -234,7 +234,7 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
             onClick={addUrl}
             disabled={!urlValue.trim()}
             style={{
-              fontFamily: 'Karla, sans-serif',
+              fontFamily: 'Inter, sans-serif',
               fontSize: 12,
               borderRadius: '0.5rem',
               padding: '7px 14px',
@@ -252,7 +252,7 @@ export default function ImageDropzone({ images, onChange, multiple = true, label
       )}
 
       {error && (
-        <p style={{ color: 'var(--color-primary)', fontFamily: 'Karla, sans-serif', fontSize: 11 }} className="mt-1.5">
+        <p style={{ color: 'var(--color-primary)', fontFamily: 'Inter, sans-serif', fontSize: 11 }} className="mt-1.5">
           {error}
         </p>
       )}

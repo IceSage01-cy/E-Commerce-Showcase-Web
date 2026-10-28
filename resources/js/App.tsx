@@ -172,7 +172,7 @@ export default function App() {
 
       <main style={{ paddingBottom: 16 }}>
         {productsLoading && route.type === 'home' && products.length === 0 ? (
-          <div className="flex items-center justify-center" style={{ height: '50vh', color: 'var(--color-text-muted)', fontFamily: 'Karla, sans-serif', fontSize: 14 }}>
+          <div className="flex items-center justify-center" style={{ height: '50vh', color: 'var(--color-text-muted)', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>
             Loading…
           </div>
         ) : route.type === 'home' && (
@@ -275,7 +275,7 @@ export default function App() {
                 <div
                   role="status"
                   className="flex items-center justify-center"
-                  style={{ minHeight: '60vh', color: 'var(--color-text-muted)', fontFamily: 'Karla, sans-serif', fontSize: 14 }}
+                  style={{ minHeight: '60vh', color: 'var(--color-text-muted)', fontFamily: 'Inter, sans-serif', fontSize: 14 }}
                 >
                   Loading your cart…
                 </div>

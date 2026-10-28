@@ -29,5 +29,8 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("frame-ancestors 'none'", $csp);
         $this->assertStringContainsString("object-src 'none'", $csp);
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp);
+        // The page loads its fonts from Google Fonts, so the policy has to allow both hosts.
+        $this->assertStringContainsString('https://fonts.googleapis.com', $csp);
+        $this->assertStringContainsString('https://fonts.gstatic.com', $csp);
     }
 }

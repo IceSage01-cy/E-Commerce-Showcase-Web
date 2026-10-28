@@ -59,6 +59,16 @@ class HomePageTest extends TestCase
         $response->assertDontSee('rel="preload" as="image"', false);
     }
 
+    public function test_pages_load_the_design_fonts(): void
+    {
+        foreach (['/', '/admin/login'] as $url) {
+            $this->get($url)
+                ->assertOk()
+                ->assertSee('fonts.googleapis.com/css2?family=Inter', false)
+                ->assertSee('family=Outfit', false);
+        }
+    }
+
     public function test_banner_api_matches_what_the_page_embeds(): void
     {
         $this->banner();

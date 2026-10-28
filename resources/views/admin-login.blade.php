@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta name="theme-color" content="#0A0A0B">
+    @include('partials.fonts')
     <style>
         body {
             margin: 0;
@@ -17,7 +18,7 @@
             align-items: center;
             justify-content: center;
             background: #0A0A0B;
-            font-family: 'Segoe UI', Inter, sans-serif;
+            font-family: Inter, 'Segoe UI', sans-serif;
         }
         .card {
             background: #111114;

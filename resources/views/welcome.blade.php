@@ -15,6 +15,8 @@
         <link rel="preload" as="image" href="{{ $banners->first()['image'] }}" fetchpriority="high">
     @endif
 
+    @include('partials.fonts')
+
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/main.tsx'])
 
@@ -23,7 +25,7 @@
         <script type="application/json" id="initial-banners">@json($banners)</script>
     @endif
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
+<body class="antialiased">
     <div id="root"></div>
 </body>
 </html>
