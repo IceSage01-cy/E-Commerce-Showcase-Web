@@ -11,9 +11,8 @@ class EnsureAdminAuthenticated
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->session()->get('is_admin')) {
-            // Browsers navigating to /admin get bounced to the login page; the admin UI's own
-            // fetch/axios calls get a real 401 instead. Otherwise an expired session makes
-            // axios silently follow the redirect and treat the login HTML as a "successful" save.
+            // Page visits go to the login page. The admin UI's own requests get a 401 instead,
+            // so an expired session is not mistaken for a saved change.
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Your admin session has expired. Please log in again.'], 401);
             }

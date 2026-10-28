@@ -1,6 +1,4 @@
-// Shared product types + small formatting helpers.
-// The actual catalog now lives in the database (see database/seeders/ProductSeeder.php)
-// and is fetched from /api/products — nothing here is hardcoded data anymore.
+// Shared product types and small formatting helpers. The catalogue itself comes from /api/products.
 
 /** Listing type: how the item is sold (in local stock, pre-order from Japan, ...). */
 export type Category = 'on-hand' | 'pre-order' | 'new-release';

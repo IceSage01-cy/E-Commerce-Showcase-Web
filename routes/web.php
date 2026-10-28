@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 // Closures are avoided in routes so `route:cache` works in production.
 Route::get('/', HomeController::class);
 
-// Public, read-only — used by the homepage HeroSlider and storefront.
+// Public read-only endpoints for the storefront.
 // Throttled per IP so the catalogue can't be hammered (each uncached list read is a database query).
 Route::middleware('throttle:120,1')->group(function () {
     Route::get('/api/banners', [BannerController::class, 'index'])->name('banners.index');

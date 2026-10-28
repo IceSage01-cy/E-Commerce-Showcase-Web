@@ -60,15 +60,9 @@ return [
             'report' => false,
         ],
 
-        // Cloudflare R2 is S3-compatible, so it reuses the 's3' driver
-        // with R2's endpoint and credentials.
-        //
-        // 'throw' is intentionally true here (unlike the other disks above):
-        // without it, a failed put() (bad credentials, wrong endpoint, R2
-        // unreachable) returns false instead of throwing, and
-        // UploadController would have nothing to catch — it would return
-        // what looks like a successful upload URL for a file that was
-        // never actually written.
+        // Cloudflare R2 is S3-compatible, so it uses the 's3' driver with R2's endpoint and credentials.
+        // 'throw' is true on purpose: otherwise a failed put() returns false and
+        // UploadController would report an upload that never happened.
         'r2' => [
             'driver' => 's3',
             'key' => env('R2_ACCESS_KEY_ID'),

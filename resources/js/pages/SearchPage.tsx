@@ -57,9 +57,7 @@ export default function SearchPage({ initialQuery, initialCategory, initialColle
       list = list.filter((p) => p.figureType === 'scale' || p.collection === SCALE_SLUG);
     }
 
-    // Text search. With no typed query, we skip this entirely and hand the
-    // (category-filtered) list to the AnimeBrowser drill-down instead — see
-    // the render section below.
+    // Text search. With no typed query the list goes to the AnimeBrowser drill-down instead (see below).
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((p) =>

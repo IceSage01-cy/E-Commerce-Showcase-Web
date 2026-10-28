@@ -33,7 +33,7 @@ export default function FeaturedProducts({ products = [], onView, onAddToCart, o
           }
         />
 
-        {/* Grid — first card is large, rest are standard */}
+        {/* First card is large, the rest are standard */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {featured.slice(0, 2).map((p, i) => (
             <div key={p.id} className={i === 0 ? 'col-span-2 sm:col-span-2 lg:col-span-2' : 'col-span-2 sm:col-span-1 lg:col-span-2'}>

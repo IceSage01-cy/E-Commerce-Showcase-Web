@@ -22,7 +22,7 @@ class BannerSeeder extends Seeder
             ],
             [
                 'title' => 'Japan Pre-Orders Now Open',
-                'subtitle' => 'EVA Unit-01 · Gear 5 Luffy · Zero Two — Arriving Early 2027',
+                'subtitle' => 'EVA Unit-01 · Gear 5 Luffy · Zero Two. Arriving Early 2027',
                 'cta_label' => 'Reserve Yours',
                 'cta_action' => 'pre-order',
                 'image_url' => 'https://images.unsplash.com/photo-1762376622511-0c1d97912bf5?w=1600&h=700&fit=crop&auto=format',

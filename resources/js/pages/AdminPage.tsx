@@ -443,7 +443,7 @@ export default function AdminPage({
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
 
-          {/* ── DASHBOARD ── */}
+          {/* Dashboard */}
           {tab === 'dashboard' && (
             <div className="p-6 max-w-5xl">
               <div className="mb-6">
@@ -507,7 +507,7 @@ export default function AdminPage({
             </div>
           )}
 
-          {/* ── PRODUCTS ── */}
+          {/* Products */}
           {tab === 'products' && (
             <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between gap-4 mb-6">
@@ -809,13 +809,13 @@ export default function AdminPage({
             </div>
           )}
 
-          {/* ── CATEGORIES ── */}
+          {/* Categories */}
           {/* Kept mounted (hidden when not open) so an unsaved draft survives switching tabs. */}
           <div style={{ display: tab === 'categories' ? undefined : 'none' }}>
             <CategoriesTab categories={categories} products={products} onAdd={onAddCategory} onEdit={onEditCategory} onDelete={onDeleteCategory} />
           </div>
 
-          {/* ── BANNERS ── */}
+          {/* Banners */}
           <div style={{ display: tab === 'banners' ? undefined : 'none' }}>
             <BannersTab
               banners={banners}
@@ -826,10 +826,10 @@ export default function AdminPage({
             />
           </div>
 
-          {/* ── ANIME COVERS ── */}
+          {/* Anime covers */}
           {tab === 'anime' && <AnimeCoversTab covers={animeCovers} onSave={onSaveAnimeCover} />}
 
-          {/* ── ORDERS ── */}
+          {/* Orders */}
           {tab === 'orders' && (
             <div className="p-6 max-w-2xl">
               <div className="mb-6">
@@ -1004,7 +1004,7 @@ export default function AdminPage({
                       placeholder="3500"
                     />
                   </Field>
-                  <Field label="Sale Price (₱) — optional">
+                  <Field label="Sale Price (₱), optional">
                     <input
                       style={inputStyle}
                       type="number"

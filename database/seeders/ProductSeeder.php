@@ -123,7 +123,7 @@ class ProductSeeder extends Seeder
                 'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-08',
-                'description' => 'The newest and most powerful form of the King of Pirates — Gear 5 Luffy in his Sun God Nika awakening! White hair, white clothing, and surrounded by his cartoonish cloud-like aura. A monumental addition to any One Piece collection.',
+                'description' => 'The newest and most powerful form of the King of Pirates: Gear 5 Luffy in his Sun God Nika awakening! White hair, white clothing, and surrounded by his cartoonish cloud-like aura. A monumental addition to any One Piece collection.',
                 'manufacturer' => 'Good Smile Company',
                 'scale' => '1/7',
                 'estimated_arrival' => 'February 2027',
@@ -144,7 +144,7 @@ class ProductSeeder extends Seeder
                 'in_stock' => true,
                 'is_featured' => true,
                 'date_added' => '2026-09-05',
-                'description' => 'Complete set featuring Itadori Yuji, Megumi Fushiguro, and Nobara Kugisaki in their school uniforms with their respective weapons/shikigami. Sold as a set only. Last one in stock — collector\'s item.',
+                'description' => 'Complete set featuring Itadori Yuji, Megumi Fushiguro, and Nobara Kugisaki in their school uniforms with their respective weapons/shikigami. Sold as a set only. Last one in stock, a collector\'s item.',
                 'manufacturer' => 'Bandai Spirits',
                 'scale' => '1/8',
             ],
@@ -246,8 +246,8 @@ class ProductSeeder extends Seeder
                 'manufacturer' => 'Various (Bandai, Popy)',
                 'scale' => 'Various',
             ],
-            // ── Newer arrivals (October 2026): covers the new-release listing type, BIB condition,
-            // an out-of-stock item, pre-orders, a sale price and a second rare-exclusive piece. ──
+            // Newer arrivals (October 2026): covers the new-release listing type, BIB condition,
+            // an out-of-stock item, pre-orders, a sale price and a second rare-exclusive piece.
             [
                 'name' => 'Frieren Mage\'s Staff Ver.',
                 'series' => 'Frieren: Beyond Journey\'s End',
@@ -403,8 +403,8 @@ class ProductSeeder extends Seeder
                 'manufacturer' => 'Various (Bandai, Popy)',
                 'scale' => 'Various',
             ],
-            // ── Prize and Scale examples outside CHIX, so the Prize / Scale filters have something
-            // to show in every category. 'figure_type' is optional outside CHIX. ──
+            // Prize and Scale examples outside CHIX, so the Prize / Scale filters have something
+            // to show in every category. 'figure_type' is optional outside CHIX.
             [
                 'name' => 'Naruto Uzumaki Prize Figure',
                 'series' => 'Naruto Shippuden',
@@ -507,8 +507,8 @@ class ProductSeeder extends Seeder
                 'scale' => '1/6',
                 'estimated_arrival' => 'April 2027',
             ],
-            // ── Nendoroids: Good Smile's chibi figure line. They also belong to a main category
-            // (Anime Figures here), but show in the Nendoroids section via 'is_nendoroid'. ──
+            // Nendoroids: Good Smile's chibi figure line. They also belong to a main category
+            // (Anime Figures here), but show in the Nendoroids section via 'is_nendoroid'.
             [
                 'name' => 'Nendoroid Gojo Satoru',
                 'series' => 'Jujutsu Kaisen',
@@ -590,8 +590,8 @@ class ProductSeeder extends Seeder
                 'manufacturer' => 'Good Smile Company',
                 'scale' => 'Non-scale',
             ],
-            // ── More anime and characters: Spy x Family, My Hero Academia, One Punch Man,
-            // Fullmetal Alchemist, Sailor Moon, Death Note, Mob Psycho 100, Kaguya-sama. ──
+            // More anime and characters: Spy x Family, My Hero Academia, One Punch Man,
+            // Fullmetal Alchemist, Sailor Moon, Death Note, Mob Psycho 100, Kaguya-sama.
             [
                 'name' => 'Anya Forger Spy Mission Ver.',
                 'series' => 'Spy x Family',

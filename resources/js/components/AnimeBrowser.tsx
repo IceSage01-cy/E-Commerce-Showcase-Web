@@ -159,7 +159,7 @@ export default function AnimeBrowser({ products, onView, onAddToCart, split, roo
     </p>
   );
 
-  // Last step — figures for a specific character
+  // Last step: the figures of one character
   if (series && character) {
     return (
       <div>

@@ -6,14 +6,9 @@ use Closure;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Caches the public product list so visitors don't each trigger a full read of the
- * products table (on Supabase every such read counts toward the monthly egress quota).
- *
- * Uses its own cache store (CATALOG_CACHE_STORE, default "file") rather than the app's
- * default one, because the default is the database; caching a database read in the
- * database would save nothing.
- *
- * Every change to a product bumps a version number, which makes all cached lists stale at once.
+ * Caches the public product list so each visitor doesn't read the whole products table.
+ * It uses its own store (CATALOG_CACHE_STORE, default "file") because the default is the database.
+ * Any product change bumps a version number, which makes every cached list stale at once.
  */
 class CatalogCache
 {

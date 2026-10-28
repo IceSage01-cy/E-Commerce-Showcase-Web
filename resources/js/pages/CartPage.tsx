@@ -2,12 +2,8 @@ import { useState, useRef } from 'react';
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
 
-// html2canvas (the original) can't parse the oklch()/lab()/lch() color
-// functions Tailwind v4 generates by default, and throws "Attempting to
-// parse an unsupported color function" when it hits one. html2canvas-pro
-// is a maintained fork with the same API that adds support for those.
-// It is large, so it loads on demand instead of with the cart page: it is
-// fetched when the receipt step opens and again (from cache) on download.
+// html2canvas-pro rather than html2canvas: the original can't parse the oklch() colours Tailwind v4 generates.
+// It is large, so it loads on demand: when the receipt step opens, and again from cache on download.
 const loadReceiptLibrary = () => import('html2canvas-pro');
 
 interface CartPageProps {
@@ -143,17 +139,11 @@ export default function CartPage({
   });
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  // FIX 1: receipt number + date are now generated once (when the customer
-  // reaches the receipt step) and stored in state, instead of being
-  // recomputed inline on every render. Previously `Date.now()` and
-  // `new Date()` ran fresh on every re-render (e.g. after clicking "Copy"
-  // or "Download", which flip `copied`/`downloading` state), so the
-  // receipt number and date shown on screen could silently change after
-  // the customer had already copied or downloaded a different value.
+  // Set once when the receipt step opens, so the number and date don't change when the page re-renders.
   const [receiptMeta, setReceiptMeta] = useState<ReceiptMeta | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // Aggregate by product id
+  // One line per product, with a quantity
   const itemMap = new Map<string, number>();
   for (const id of cart) itemMap.set(id, (itemMap.get(id) ?? 0) + 1);
   const items = Array.from(itemMap.entries())
@@ -178,8 +168,6 @@ export default function CartPage({
     Boolean(info.contact.trim()) &&
     Boolean(info.address.trim());
 
-  // FIX 1 (cont.): generate the receipt number/date exactly once, at the
-  // moment the customer moves into the receipt step.
   function goToReceipt() {
     setReceiptMeta({
       receiptNo: `PA-${Date.now().toString().slice(-6)}`,
@@ -207,10 +195,7 @@ export default function CartPage({
     if (!receiptRef.current || downloading) return;
     setDownloading(true);
 
-    // Swap each <img> in the receipt to a same-origin proxied copy before
-    // capturing — cross-origin R2 images (even with useCORS) taint the
-    // canvas and make toDataURL() throw, so this sidesteps that instead of
-    // depending on R2's CORS configuration.
+    // Swap each image for a same-origin copy first: cross-origin R2 images taint the canvas and break the export.
     const imgs = Array.from(receiptRef.current.querySelectorAll('img'));
     const originalSrcs = imgs.map((img) => img.src);
 
@@ -229,19 +214,14 @@ export default function CartPage({
               reader.onerror = reject;
               reader.readAsDataURL(blob);
             });
-            // FIX 2: wait for the swapped-in data URL to actually finish
-            // loading/decoding before moving on. Previously `img.src =
-            // dataUrl` was fire-and-forget, so html2canvas could snapshot
-            // the receipt before the new image had painted, producing
-            // blank or half-rendered thumbnails intermittently.
+            // Wait for the new image to load, or the capture can catch it half drawn.
             await new Promise<void>((resolve) => {
               img.onload = () => resolve();
               img.onerror = () => resolve(); // don't hang forever on a bad image
               img.src = dataUrl;
             });
           } catch {
-            // Leave this one image as-is; html2canvas will just skip it
-            // rather than fail the whole capture.
+            // Keep the original image; the capture skips it.
           }
         })
       );
@@ -249,7 +229,7 @@ export default function CartPage({
       const { default: html2canvas } = await loadReceiptLibrary();
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: '#0E0E12',
-        scale: 2, // sharper output for a small screenshot-style card
+        scale: 2,
       });
       const link = document.createElement('a');
       link.download = `receipt-${receiptNo}.png`;
@@ -404,7 +384,7 @@ export default function CartPage({
         })}
       </div>
 
-      {/* ── STEP 1: CART ── */}
+      {/* Step 1: cart */}
       {step === 'cart' && (
         <div>
           <h1
@@ -630,7 +610,7 @@ export default function CartPage({
         </div>
       )}
 
-      {/* ── STEP 2: DETAILS ── */}
+      {/* Step 2: details */}
       {step === 'details' && (
         <div>
           <h1
@@ -774,7 +754,7 @@ export default function CartPage({
         </div>
       )}
 
-      {/* ── STEP 3: RECEIPT ── */}
+      {/* Step 3: receipt */}
       {step === 'receipt' && (
         <div>
           <h1

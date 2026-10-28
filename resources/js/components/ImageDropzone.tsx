@@ -11,8 +11,7 @@ interface ImageDropzoneProps {
 }
 
 /**
- * Drag files in from the desktop (or click to browse) to upload them straight to
- * the server — no more pasting image URLs by hand. Uploaded thumbnails can be
+ * Drag files in from the desktop (or click to browse) to upload them. Thumbnails can be
  * dragged to reorder, or removed with the × button.
  */
 export default function ImageDropzone({ images, onChange, multiple = true, label, folder }: ImageDropzoneProps) {

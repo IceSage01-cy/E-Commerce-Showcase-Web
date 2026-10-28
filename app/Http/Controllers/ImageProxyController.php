@@ -9,19 +9,9 @@ use Illuminate\Support\Facades\Http;
 class ImageProxyController extends Controller
 {
     /**
-     * Streams an image from our own R2 bucket back through our own origin.
-     *
-     * This exists so client-side canvas capture (html2canvas, used for the
-     * downloadable order receipt) isn't blocked by the browser's
-     * cross-origin canvas restrictions — those only allow reading pixel
-     * data back out of a canvas once every image drawn onto it was loaded
-     * either same-origin or with a CORS header we don't control on R2.
-     * Routing the request through our own domain sidesteps that instead of
-     * depending on R2's CORS configuration.
-     *
-     * Only ever fetches from our own configured R2 public URL — never an
-     * arbitrary URL supplied by the caller — so this can't be used as an
-     * open SSRF proxy.
+     * Streams an image from our R2 bucket through our own origin, so the receipt export (html2canvas)
+     * can draw it without tainting the canvas. It only fetches from the configured R2 host, never
+     * from a caller-supplied address.
      */
     public function show(Request $request): Response
     {

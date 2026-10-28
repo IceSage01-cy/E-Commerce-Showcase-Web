@@ -74,7 +74,7 @@ class CatalogTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('image');
     }
 
-    // ── Seeders ────────────────────────────────────────────────────────
+    // Seeders
 
     public function test_seeding_repeatedly_never_duplicates_anything(): void
     {
@@ -110,7 +110,7 @@ class CatalogTest extends TestCase
         Product::factory()->create(['name' => 'A', 'series' => 'S', 'condition' => 'MIB']);
     }
 
-    // ── Public API ─────────────────────────────────────────────────────
+    // Public API
 
     public function test_public_api_exposes_boolean_in_stock_and_no_quantity(): void
     {
@@ -122,7 +122,7 @@ class CatalogTest extends TestCase
         $this->assertArrayNotHasKey('stock', $item);
     }
 
-    // ── Admin: in/out of stock ─────────────────────────────────────────
+    // Admin: in/out of stock
 
     public function test_admin_can_toggle_stock_with_one_request(): void
     {
@@ -178,7 +178,7 @@ class CatalogTest extends TestCase
         $this->admin()->putJson("/admin/api/products/{$id}", $this->payload(['price' => 999]))->assertOk();
     }
 
-    // ── Conditions, categories, ordering, bulk edits ────────────────────────
+    // Conditions, categories, ordering, bulk edits
 
     public function test_condition_must_be_misb_mib_bib_or_loose(): void
     {
@@ -408,7 +408,7 @@ class CatalogTest extends TestCase
         );
     }
 
-    // ── Public list: lean payload, caching ──────────────────────────────────
+    // Public list: lean payload, caching
 
     public function test_list_is_lean_but_detail_has_everything(): void
     {

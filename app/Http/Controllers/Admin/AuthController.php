@@ -24,15 +24,14 @@ class AuthController extends Controller
         $expected = (string) config('admin.password');
         $given = (string) $request->input('password');
 
-        // hash_equals prevents timing attacks compared to === .
+        // Constant-time comparison.
         if ($expected === '' || ! hash_equals($expected, $given)) {
             Log::warning('Failed admin login attempt', ['ip' => $request->ip()]);
 
             return back()->withErrors(['password' => 'Incorrect password.'])->onlyInput();
         }
 
-        // Regenerate the session id on privilege escalation to prevent
-        // session fixation attacks.
+        // New session id on login, against session fixation.
         $request->session()->regenerate();
         $request->session()->put('is_admin', true);
 
