@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class SecurityHeadersTest extends TestCase
 {
+    // The home page now reads the hero banners from the database.
+    use RefreshDatabase;
+
     public function test_pages_send_hardening_headers(): void
     {
         $response = $this->get('/');

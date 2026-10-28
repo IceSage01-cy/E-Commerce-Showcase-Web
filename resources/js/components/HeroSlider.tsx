@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 
 interface Slide {
@@ -19,15 +19,33 @@ interface HeroSliderProps {
 const FULL_SCREEN = 'relative w-screen h-svh min-h-[520px]';
 const FULL_SCREEN_STYLE = { marginLeft: 'calc(50% - 50vw)' };
 
+// The banners the server put in the page (see welcome.blade.php), kept after the first read. Leaving the homepage and
+// coming back remounts the hero, and without this it would show the grey placeholder again while it re-fetched.
+let knownSlides: Slide[] | null = null;
+
+function initialSlides(): Slide[] {
+  if (knownSlides) return knownSlides;
+  try {
+    const data = JSON.parse(document.getElementById('initial-banners')?.textContent ?? '');
+    if (Array.isArray(data) && data.length > 0) knownSlides = data;
+  } catch {
+    // No banners in the page (or unreadable): the hero asks /api/banners instead.
+  }
+  return knownSlides ?? [];
+}
+
 export default function HeroSlider({ onNavigate }: HeroSliderProps) {
-  const [slides, setSlides] = useState<Slide[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [slides, setSlides] = useState<Slide[]>(initialSlides);
+  const [loaded, setLoaded] = useState(slides.length > 0);
   const [current, setCurrent] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const needsFetch = useRef(slides.length === 0);
 
   useEffect(() => {
+    if (!needsFetch.current) return;
     axios.get('/api/banners').then((res) => {
       if (Array.isArray(res.data) && res.data.length > 0) {
+        knownSlides = res.data;
         setSlides(res.data);
         setCurrent(0);
       }
@@ -68,9 +86,12 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
           className="absolute inset-0 transition-opacity duration-700"
           style={{ opacity: i === current ? 1 : 0 }}
         >
+          {/* The first photo is what the visitor waits for; the others load after it. */}
           <img
             src={s.image}
             alt={s.title}
+            fetchPriority={i === 0 ? 'high' : 'low'}
+            decoding="async"
             className="w-full h-full object-cover"
             style={{ filter: 'brightness(0.45) saturate(1.1)' }}
           />

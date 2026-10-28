@@ -9,12 +9,13 @@ use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\AnimeCoverController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageProxyController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 // Closures are avoided in routes so `route:cache` works in production.
-Route::view('/', 'welcome');
+Route::get('/', HomeController::class);
 
 // Public, read-only — used by the homepage HeroSlider and storefront.
 // Throttled per IP so the catalogue can't be hammered (each uncached list read is a database query).

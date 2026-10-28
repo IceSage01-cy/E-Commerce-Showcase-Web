@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class Banner extends Model
 {
@@ -21,6 +22,15 @@ class Banner extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    /** The banners shown on the storefront hero, in order, already in the frontend's shape. */
+    public static function activeSlides(): Collection
+    {
+        return static::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map->toFrontend();
+    }
 
     /** Shape matching the frontend's HeroSlider `slide` object. */
     public function toFrontend(): array
