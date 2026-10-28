@@ -1,11 +1,14 @@
 import { useState, useRef } from 'react';
+import type { Product } from '../data/products';
+import { formatPrice } from '../data/products';
+
 // html2canvas (the original) can't parse the oklch()/lab()/lch() color
 // functions Tailwind v4 generates by default, and throws "Attempting to
 // parse an unsupported color function" when it hits one. html2canvas-pro
 // is a maintained fork with the same API that adds support for those.
-import html2canvas from 'html2canvas-pro';
-import type { Product } from '../data/products';
-import { formatPrice } from '../data/products';
+// It is large, so it loads on demand instead of with the cart page: it is
+// fetched when the receipt step opens and again (from cache) on download.
+const loadReceiptLibrary = () => import('html2canvas-pro');
 
 interface CartPageProps {
   cart: string[];
@@ -188,6 +191,8 @@ export default function CartPage({
         minute: '2-digit',
       }),
     });
+    // Start fetching the image library now so "Download image" is ready by the time it is tapped.
+    loadReceiptLibrary().catch(() => {});
     setStep('receipt');
   }
 
@@ -241,6 +246,7 @@ export default function CartPage({
         })
       );
 
+      const { default: html2canvas } = await loadReceiptLibrary();
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: '#0E0E12',
         scale: 2, // sharper output for a small screenshot-style card

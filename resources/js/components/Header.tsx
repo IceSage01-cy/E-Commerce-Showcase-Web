@@ -17,11 +17,13 @@ interface HeaderProps {
   onSearch: (query: string) => void;
   onNavigate: (page: string) => void;
   cartCount: number;
+  /** Called when the shopper is about to open the cart (hover, focus, touch), so it can be preloaded. */
+  onCartIntent?: () => void;
   /** Nav action of the page being shown; that item stays highlighted. */
   current?: string | null;
 }
 
-export default function Header({ categories, onSearch, onNavigate, cartCount, current = null }: HeaderProps) {
+export default function Header({ categories, onSearch, onNavigate, cartCount, onCartIntent, current = null }: HeaderProps) {
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const NAV_ITEMS = [...categories.map((c) => ({ label: c.label, action: c.slug })), ...EXTRA_NAV_ITEMS];
@@ -83,6 +85,9 @@ export default function Header({ categories, onSearch, onNavigate, cartCount, cu
           {/* Cart */}
           <button
             onClick={() => onNavigate('cart')}
+            onMouseEnter={onCartIntent}
+            onFocus={onCartIntent}
+            onTouchStart={onCartIntent}
             aria-label="Cart"
             style={{ color: '#80808C' }}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#141418] hover:text-[#F0F0F4] transition-all relative"

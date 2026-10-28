@@ -5,14 +5,20 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import SearchPage from './pages/SearchPage';
-// Loaded on demand: the cart page pulls in the receipt image library, which the rest of the shop doesn't need.
-const CartPage = lazy(() => import('./pages/CartPage'));
+// Loaded on demand: the cart page is only needed by shoppers who open it.
+const loadCartPage = () => import('./pages/CartPage');
+const CartPage = lazy(loadCartPage);
+// Start fetching it before it is asked for (hovering the cart, adding an item) so opening it is instant.
+const prefetchCartPage = () => {
+  loadCartPage().catch(() => {});
+};
 import ChixPage from './pages/ChixPage';
 import NendoroidsPage from './pages/NendoroidsPage';
 import JapanNewArrivalsPage from './pages/JapanNewArrivalsPage';
 import PinasOnHandPage from './pages/PinasOnHandPage';
 import AnimeBrowser from './components/AnimeBrowser';
 import SectionHeading from './components/SectionHeading';
+import ChunkErrorBoundary from './components/ChunkErrorBoundary';
 import type { Product, CategoryInfo } from './data/products';
 import { FALLBACK_CATEGORIES, CHIX_SLUG } from './data/products';
 
@@ -127,6 +133,7 @@ export default function App() {
     const product = products.find((x) => x.id === id);
     if (product && !product.inStock) return; // out-of-stock items can never enter the cart
     setCart((prev) => [...prev, id]);
+    prefetchCartPage();
     setCartToast(product?.name ?? 'Item');
     // Reset the timer so a quick second add doesn't get its toast cut short by the first one.
     clearTimeout(toastTimer.current);
@@ -150,6 +157,7 @@ export default function App() {
         onSearch={(q) => handleSearch(q)}
         onNavigate={navigate}
         cartCount={cart.length}
+        onCartIntent={prefetchCartPage}
         current={
           route.type === 'collection' ? route.collection
             : route.type === 'chix' ? CHIX_SLUG
@@ -257,15 +265,28 @@ export default function App() {
           <PinasOnHandPage products={products} covers={animeCovers} onView={viewProduct} onAddToCart={addToCart} />
         )}
         {route.type === 'cart' && (
-          <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-20" />}>
-            <CartPage
-              cart={cart}
-              products={products}
-              onNavigate={navigate}
-              onRemoveFromCart={removeFromCart}
-              onClearCart={clearCart}
-            />
-          </Suspense>
+          <ChunkErrorBoundary>
+            <Suspense
+              fallback={
+                // Keeps the page tall while the cart loads, so the footer doesn't jump up and back down.
+                <div
+                  role="status"
+                  className="flex items-center justify-center"
+                  style={{ minHeight: '60vh', color: 'var(--color-text-muted)', fontFamily: 'Karla, sans-serif', fontSize: 14 }}
+                >
+                  Loading your cart…
+                </div>
+              }
+            >
+              <CartPage
+                cart={cart}
+                products={products}
+                onNavigate={navigate}
+                onRemoveFromCart={removeFromCart}
+                onClearCart={clearCart}
+              />
+            </Suspense>
+          </ChunkErrorBoundary>
         )}
       </main>
 
