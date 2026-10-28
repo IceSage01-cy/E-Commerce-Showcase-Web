@@ -271,8 +271,9 @@ export default function CartPage({
     { id: 'receipt', label: 'Receipt' },
   ];
 
-  // Empty state
-  if (cart.length === 0 && step === 'cart') {
+  // Empty state. Judged by the products that still exist, not by the saved ids, so a cart that only holds
+  // deleted products reads as empty instead of showing "0 items" with a working checkout button.
+  if (items.length === 0 && step === 'cart') {
     return (
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '80px 16px', textAlign: 'center' }}>
         <div style={{ color: S.faint, display: 'flex', justifyContent: 'center', marginBottom: 24 }}>

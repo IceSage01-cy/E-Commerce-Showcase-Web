@@ -54,6 +54,7 @@ export default function App() {
   // Series name => cover picture URL (only series that have one).
   const [animeCovers, setAnimeCovers] = useState<Record<string, string>>({});
   const [productsLoading, setProductsLoading] = useState(true);
+  const [productsReady, setProductsReady] = useState(false);
   const [cart, setCart] = useState<string[]>(loadCart);
   const [cartToast, setCartToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -61,18 +62,20 @@ export default function App() {
   useEffect(() => {
     axios.get('/api/products').then((res) => {
       setProducts(res.data);
-    }).finally(() => setProductsLoading(false));
+      setProductsReady(true);
+    }).catch(() => {}).finally(() => setProductsLoading(false));
   }, []);
 
-  // A saved cart can hold products that were deleted since the visit. Drop them so the cart count stays honest.
+  // A saved cart can hold products that were deleted since the visit, or every product if the shop was emptied.
+  // Drop them so the cart count stays honest. Only after the list loaded, so a failed request doesn't wipe the cart.
   useEffect(() => {
-    if (products.length === 0) return;
+    if (!productsReady) return;
     const known = new Set(products.map((p) => p.id));
     setCart((prev) => {
       const valid = prev.filter((id) => known.has(id));
       return valid.length === prev.length ? prev : valid;
     });
-  }, [products]);
+  }, [products, productsReady]);
 
   useEffect(() => {
     // Main categories + their admin-managed background pictures. The page works without them (fallback tiles).
